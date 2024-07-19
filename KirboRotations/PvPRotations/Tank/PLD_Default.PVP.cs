@@ -42,6 +42,8 @@ public sealed class PLD_DefaultPvP : PaladinRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction PhalanxPvP { get; } = new BaseAction((ActionID)29069);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

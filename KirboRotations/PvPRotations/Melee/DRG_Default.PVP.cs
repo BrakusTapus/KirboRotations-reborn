@@ -42,6 +42,9 @@ public sealed class DRG_DefaultPvP : DragoonRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction SkyHighPvP { get; } = new BaseAction((ActionID)29497);
+    private static IBaseAction SkyShatterPvP { get; } = new BaseAction((ActionID)29499);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

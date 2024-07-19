@@ -42,6 +42,8 @@ public sealed class DNC_DefaultPvP : DancerRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction ContraDancePvP { get; } = new BaseAction((ActionID)29432);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

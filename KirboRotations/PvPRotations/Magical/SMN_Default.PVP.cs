@@ -42,6 +42,11 @@ public class SMN_DefaultPvP : SummonerRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction SummonBahamutPvP { get; } = new BaseAction((ActionID)29673);
+    private static IBaseAction SummonPhoenixPvP  { get; } = new BaseAction((ActionID)29678);
+    private static IBaseAction MegaflarePvP { get; } = new BaseAction((ActionID)29675);
+    private static IBaseAction EverlastingPvP { get; } = new BaseAction((ActionID)29680);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

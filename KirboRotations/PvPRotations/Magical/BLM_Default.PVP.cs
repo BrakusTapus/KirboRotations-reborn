@@ -42,6 +42,8 @@ public class BLM_DefaultPVP : BlackMageRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction SoulResonancePvP { get; } = new BaseAction((ActionID)29662);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

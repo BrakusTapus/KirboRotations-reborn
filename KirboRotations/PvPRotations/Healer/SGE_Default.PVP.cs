@@ -42,6 +42,8 @@ public class SGE_DefaultPVP : SageRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction MesotesPvP { get; } = new BaseAction((ActionID)29266);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

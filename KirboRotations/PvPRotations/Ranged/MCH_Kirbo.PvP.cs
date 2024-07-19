@@ -1,9 +1,7 @@
 #pragma warning disable CS0618 // Type or member is obsolete
-using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
-using FFXIVClientStructs.FFXIV.Client.UI.Misc;
-using KirboRotations;
 using Lumina.Excel.GeneratedSheets;
+using RotationSolver.Basic.Helpers;
 using System.ComponentModel;
 
 namespace KirboRotations.Ranged;
@@ -15,7 +13,8 @@ internal class MCH_Kirbo_PVP : MachinistRotation
 {
     public MCH_Kirbo_PVP()
     {
-        MarksmansSpitePvP.Setting.RotationCheck = () => CurrentLimitBreakLevel == 1;
+        MarksmansSpitePvP.Setting.RotationCheck = () => CustomRotationEx.CurrentLimitBreakLevel == 1;
+        BishopAutoturretPvP.Action.CastType = 3;
     }
     private byte PvP_HeatStacks
     {
@@ -27,6 +26,47 @@ internal class MCH_Kirbo_PVP : MachinistRotation
     }
 
     private bool IsPvPOverheated => Player.HasStatus(true, StatusID.Overheated_3149);
+
+    //private bool HasMitigation()
+    //{
+    //    var mitigationStatuses = new Dictionary<int, bool>
+    //    {
+    //        { 3210, Target.HasStatus(false, (StatusID)3210)},
+    //        { 3026, Target.HasStatus(false, (StatusID)3026)},
+    //        { 3188, Target.HasStatus(false, (StatusID)3188)},
+    //        { 3186, Target.HasStatus(false, (StatusID)3186)},
+    //        { 3054, Target.HasStatus(false, (StatusID)3054)},
+    //        { 1308, Target.HasStatus(false, (StatusID)1308)},
+    //        { 3036, Target.HasStatus(false, (StatusID)3036)},
+    //        { 3037, Target.HasStatus(false, (StatusID)3037)},
+    //        { 3051, Target.HasStatus(false, (StatusID)3051)},
+    //        { 3047, Target.HasStatus(false, (StatusID)3047)},
+    //        { 3044, Target.HasStatus(false, (StatusID)3044)},
+    //        { 1415, Target.HasStatus(false, (StatusID)1415)},
+    //        { 3086, Target.HasStatus(false, (StatusID)3086)},
+    //        { 3111, Target.HasStatus(false, (StatusID)3111)},
+    //        { 3110, Target.HasStatus(false, (StatusID)3110)},
+    //        { 3087, Target.HasStatus(false, (StatusID)3087)},
+    //        { 3093, Target.HasStatus(false, (StatusID)3093)},
+    //        { 2011, Target.HasStatus(false, (StatusID)2011)},
+    //        { 3186, Target.HasStatus(false, (StatusID)3186)},
+    //        { 1240, Target.HasStatus(false, (StatusID)1240)},
+    //        { 3173, Target.HasStatus(false, (StatusID)3173)},
+    //        { 4096, Target.HasStatus(false, (StatusID)4096)},
+    //        { 4097, Target.HasStatus(false, (StatusID)4097)},
+    //    };
+
+    //    foreach (var status in mitigationStatuses)
+    //    {
+    //        if (status.Value && Target.HasStatus(false, (StatusID)status.Key))
+    //        {
+    //            return  true;
+    //        }
+    //    }
+
+    //    return false;
+    //}
+
 
     private static IBaseAction MarksmansSpitePvP { get; } = new BaseAction((ActionID)29415);
 
@@ -259,85 +299,10 @@ internal class MCH_Kirbo_PVP : MachinistRotation
     #endregion Rotation Config
 
     #region Status Display
-    [Description("Limit Break Level")]
-    private unsafe static byte CurrentLimitBreakLevel
-    {
-        get
-        {
-            LimitBreakController limitBreakController = UIState.Instance()->LimitBreakController;
-            ushort currentUnits = *(ushort*)(&limitBreakController.CurrentUnits);
-
-            if (currentUnits >= 9000)
-            {
-                return 3;
-            }
-            else if (currentUnits >= 6000)
-            {
-                return 2;
-            }
-            else if (currentUnits >= 3000)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0; // Assuming 0 is the default or undefined state.
-            }
-        }
-    }
-
-    [Description("Bar Count")]
-    private unsafe static byte CurrentBarCount
-    {
-        get
-        {
-            LimitBreakController limitBreakController = UIState.Instance()->LimitBreakController;
-            byte barCount = *(byte*)(&limitBreakController.BarCount);
-
-            return barCount;
-        }
-    }
-
-    [Description("Current Units")]
-    private unsafe static ushort CurrentCurrentUnits
-    {
-        get
-        {
-            LimitBreakController limitBreakController = UIState.Instance()->LimitBreakController;
-            ushort currentUnits = *(ushort*)(&limitBreakController.CurrentUnits);
-
-            return currentUnits;
-        }
-    }
-
-    [Description("Bar Units")]
-    private unsafe static ushort CurrentBarUnits
-    {
-        get
-        {
-            LimitBreakController limitBreakController = UIState.Instance()->LimitBreakController;
-            ushort barUnits = *(ushort*)(&limitBreakController.BarUnits);
-
-            return barUnits;
-        }
-    }
-
-    [Description("Is PvP")]
-    private unsafe static bool IsCurrentPvP
-    {
-        get
-        {
-            LimitBreakController limitBreakController = UIState.Instance()->LimitBreakController;
-            bool isPvP = *(bool*)(&limitBreakController.IsPvP);
-
-            return isPvP;
-        }
-    }
-
     public override void DisplayStatus()
     {
-        ImGui.TextWrapped("LimitBreakLevel: " + CurrentLimitBreakLevel);
-        ImGuiToolTipsKirbo.HoveredTooltip("CurrentUnits: " + CurrentCurrentUnits);
+        ImGui.TextWrapped("LimitBreakLevel: " + CustomRotationEx.CurrentLimitBreakLevel);
+        ImGuiToolTipsKirbo.HoveredTooltip("CurrentUnits: " + CustomRotationEx.CurrentCurrentUnits);
 
         ImGui.TextWrapped("IsPvPOverheated: " + IsPvPOverheated);
 
@@ -409,9 +374,9 @@ internal class MCH_Kirbo_PVP : MachinistRotation
         }
 
         // Marks Man should already be taking into invulns into account
-        if (!IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CurrentLimitBreakLevel == 1)
+        if (!IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1)
         {
-            if (Target.GetHealthRatio() <= 0.2f)
+            if (Target.GetHealthRatio() <= 0.2f && Target.CurrentHp >= 30000)
             {
                 return false;
             }
@@ -437,7 +402,7 @@ internal class MCH_Kirbo_PVP : MachinistRotation
         }
 
         // Uses BioBlaster automatically when a Target is in range
-        if (BioblasterPvP.Target.Target.DistanceToPlayer() <= 11 && !IsPvPOverheated && BioblasterPvP.CanUse(out act, usedUp: true/*, skipComboCheck: true*/))
+        if (BioblasterPvP.Target.Target.DistanceToPlayer() <= 11 && !IsPvPOverheated && BioblasterPvP.CanUse(out act, usedUp: true, skipAoeCheck: true))
         {
             return true;
         }
@@ -456,7 +421,7 @@ internal class MCH_Kirbo_PVP : MachinistRotation
         }
 
         // Scattergun is used if Player is not overheated and available
-        if (!IsPvPOverheated && ScattergunPvP.CanUse(out act, usedUp: true/*, skipComboCheck: true*/) && ScattergunPvP.Target.Target.DistanceToPlayer() <= 12)
+        if (!IsPvPOverheated && ScattergunPvP.CanUse(out act, usedUp: true, skipAoeCheck: true) && ScattergunPvP.Target.Target.DistanceToPlayer() <= 12)
         {
             return true;
         }
@@ -575,7 +540,7 @@ internal class MCH_Kirbo_PVP : MachinistRotation
 
         // Bishop Turret should be used off cooldown
         // Note: Could prolly be improved using 'ChoiceTarget' in the IBaseAction
-        if (BishopAutoturretPvP.CanUse(out act)) // Without MustUse, returns CastType 7 invalid // BishopAutoturretPvP.Action.CastType
+        if (BishopAutoturretPvP.CanUse(out act, skipAoeCheck: true)) // Without MustUse, returns CastType 7 invalid // BishopAutoturretPvP.Action.CastType
         {
             BishopAutoturretPvP.Action.CastType = 3; // TODO: try 3/4/10 
             return true;

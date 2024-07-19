@@ -42,6 +42,8 @@ public sealed class GNB_DefaultPvP : GunbreakerRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction TerminalTriggerPvP { get; } = new BaseAction((ActionID)29469);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

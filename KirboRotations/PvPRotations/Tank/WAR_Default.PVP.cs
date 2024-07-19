@@ -42,6 +42,8 @@ public sealed class WAR_DefaultPvP : WarriorRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction PrimalScreamPvP { get; } = new BaseAction((ActionID)29083);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;
@@ -100,15 +102,15 @@ public sealed class WAR_DefaultPvP : WarriorRotation
     protected override bool GeneralGCD(out IAction? act)
     {
         act = null;
-        // Early exits for Guard status or Sprint usage
-        if (GuardCancel && Player.HasStatus(true, StatusID.Guard)) return false;
+        if (Player.HasStatus(true, StatusID.Guard)) return false;
         if (!Player.HasStatus(true, StatusID.Guard) && UseSprintPvP && !Player.HasStatus(true, StatusID.Sprint) && !InCombat && SprintPvP.CanUse(out act)) return true;
 
-        if (PrimalRendPvP.CanUse(out act)) return true;
+        if (Player.CurrentHp < Player.MaxHp && ChaoticCyclonePvP.CanUse(out act, skipAoeCheck: true) && HasHostilesInRange) return true;
+        if (Player.WillStatusEnd(6, true, StatusID.NascentChaos_1992) && ChaoticCyclonePvP.CanUse(out act, skipAoeCheck: true) && HasHostilesInRange) return true;
+        if (Player.CurrentHp >= 35000 && InCombat && HasHostilesInRange && PrimalRendPvP.CanUse(out act)) return true;
 
-        if (ChaoticCyclonePvP.CanUse(out act)) return true;
 
-        // if (FellCleavePvP.CanUse(out act)) return true;
+        if (FellCleavePvP.CanUse(out act) && Player.HasStatus(true, StatusID.InnerRelease, StatusID.InnerRelease_1303)) return true;
 
         if (StormsPathPvP.CanUse(out act)) return true;
         if (MaimPvP.CanUse(out act)) return true;
@@ -117,4 +119,11 @@ public sealed class WAR_DefaultPvP : WarriorRotation
 
         return base.GeneralGCD(out act);
     }
+
+    public override void DisplayStatus()
+    {
+        ImGui.TextWrapped("LimitBreakLevel: " + CustomRotationEx.CurrentLimitBreakLevel);
+        ImGuiToolTipsKirbo.HoveredTooltip("CurrentUnits: " + CustomRotationEx.CurrentCurrentUnits);
+    }
+
 }

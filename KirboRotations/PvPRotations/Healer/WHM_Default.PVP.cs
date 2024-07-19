@@ -42,6 +42,8 @@ public class WHM_DefaultPVP : WhiteMageRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction AfflatusPurgationPvP { get; } = new BaseAction((ActionID)29230);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

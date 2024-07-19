@@ -42,6 +42,8 @@ public sealed class NIN_DefaultPvP : NinjaRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction SeitonTenchuPvP { get; } = new BaseAction((ActionID)29515);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

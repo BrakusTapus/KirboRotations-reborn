@@ -42,6 +42,7 @@ public sealed class MCH_DefaultPvP : MachinistRotation
 	[RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
 	public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction MarksmansSpitePvP { get; } = new BaseAction((ActionID)29415);
 
 	private bool TryPurify(out IAction? action)
 	{

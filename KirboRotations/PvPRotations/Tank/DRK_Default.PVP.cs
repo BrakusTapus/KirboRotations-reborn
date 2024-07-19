@@ -42,6 +42,8 @@ public sealed class DRK_DefaultPvP : DarkKnightRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction EvenTidePvP { get; } = new BaseAction((ActionID)29097);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

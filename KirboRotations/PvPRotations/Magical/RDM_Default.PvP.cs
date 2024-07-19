@@ -42,6 +42,8 @@ public class RDM_DefaultPvP : RedMageRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction SouthernCrossPvP { get; } = new BaseAction((ActionID)29704);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;

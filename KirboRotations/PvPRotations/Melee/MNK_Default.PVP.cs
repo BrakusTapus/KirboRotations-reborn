@@ -42,6 +42,8 @@ public sealed class MNK_DefaultPvP : MonkRotation
     [RotationConfig(CombatType.PvP, Name = "Stop attacking while in Guard.")]
     public bool GuardCancel { get; set; } = false;
 
+    private static IBaseAction MeteoDivePvP { get; } = new BaseAction((ActionID)29485);
+
     private bool TryPurify(out IAction? action)
     {
         action = null;
