@@ -2,7 +2,7 @@
 
 [Rotation("Kirbo", CombatType.PvE, GameVersion = "7.00")]
 [SourceCode(Path = "main/DefaultRotations/Magical/BLM_Default.cs")]
-[Api(2)]
+[Api(3)]
 public class BLM_Kirbo : BlackMageRotation
 {
     public bool IsPolyglotStacksMaxed
@@ -35,7 +35,7 @@ public class BLM_Kirbo : BlackMageRotation
         var compare = usedOne ? -1 : 0;
         var count = PolyglotStacks;
         if (count == compare++) return false;
-        if (count == compare++ && !EnchinaEndAfterGCD(2)) return false;
+        if (count == compare++ && !EnochianEndAfterGCD(2)) return false;
         if (count >= compare && (HasFire || SwiftcastPvE.Cooldown.WillHaveOneChargeGCD(2) || TriplecastPvE.Cooldown.WillHaveOneChargeGCD(2))) return true;
         if (!HasFire && !SwiftcastPvE.Cooldown.WillHaveOneChargeGCD(2) && !TriplecastPvE.CanUse(out _, gcdCountForAbility: 8)) return false;
         return true;
@@ -346,7 +346,7 @@ public class BLM_Kirbo : BlackMageRotation
     {
         act = null;
 
-        if (gcdCount == 0 || IsPolyglotStacksMaxed && EnchinaEndAfterGCD(gcdCount))
+        if (gcdCount == 0 || IsPolyglotStacksMaxed && EnochianEndAfterGCD(gcdCount))
         {
             if (FoulPvE.CanUse(out act)) return true;
             if (XenoglossyPvE.CanUse(out act)) return true;

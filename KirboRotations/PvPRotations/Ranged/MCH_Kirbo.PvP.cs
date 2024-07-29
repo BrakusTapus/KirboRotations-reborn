@@ -8,7 +8,7 @@ namespace KirboRotations.Ranged;
 
 [BetaRotation]
 [Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.01", Description = "Kirbo's Beta Rotation for MCH\nUses LB\nUses Turret")]
-[Api(2)]
+[Api(3)]
 internal class MCH_Kirbo_PVP : MachinistRotation
 {
     public MCH_Kirbo_PVP()
@@ -27,45 +27,57 @@ internal class MCH_Kirbo_PVP : MachinistRotation
 
     private bool IsPvPOverheated => Player.HasStatus(true, StatusID.Overheated_3149);
 
-    //private bool HasMitigation()
-    //{
-    //    var mitigationStatuses = new Dictionary<int, bool>
-    //    {
-    //        { 3210, Target.HasStatus(false, (StatusID)3210)},
-    //        { 3026, Target.HasStatus(false, (StatusID)3026)},
-    //        { 3188, Target.HasStatus(false, (StatusID)3188)},
-    //        { 3186, Target.HasStatus(false, (StatusID)3186)},
-    //        { 3054, Target.HasStatus(false, (StatusID)3054)},
-    //        { 1308, Target.HasStatus(false, (StatusID)1308)},
-    //        { 3036, Target.HasStatus(false, (StatusID)3036)},
-    //        { 3037, Target.HasStatus(false, (StatusID)3037)},
-    //        { 3051, Target.HasStatus(false, (StatusID)3051)},
-    //        { 3047, Target.HasStatus(false, (StatusID)3047)},
-    //        { 3044, Target.HasStatus(false, (StatusID)3044)},
-    //        { 1415, Target.HasStatus(false, (StatusID)1415)},
-    //        { 3086, Target.HasStatus(false, (StatusID)3086)},
-    //        { 3111, Target.HasStatus(false, (StatusID)3111)},
-    //        { 3110, Target.HasStatus(false, (StatusID)3110)},
-    //        { 3087, Target.HasStatus(false, (StatusID)3087)},
-    //        { 3093, Target.HasStatus(false, (StatusID)3093)},
-    //        { 2011, Target.HasStatus(false, (StatusID)2011)},
-    //        { 3186, Target.HasStatus(false, (StatusID)3186)},
-    //        { 1240, Target.HasStatus(false, (StatusID)1240)},
-    //        { 3173, Target.HasStatus(false, (StatusID)3173)},
-    //        { 4096, Target.HasStatus(false, (StatusID)4096)},
-    //        { 4097, Target.HasStatus(false, (StatusID)4097)},
-    //    };
+    private bool ListOfPvPMitStatusses;
 
-    //    foreach (var status in mitigationStatuses)
-    //    {
-    //        if (status.Value && Target.HasStatus(false, (StatusID)status.Key))
-    //        {
-    //            return  true;
-    //        }
-    //    }
+    private bool HasMitigation()
+    {
+        //var purifyStatuses = new Dictionary<int>
+        //{
+        //	{ 1343, Use1343PvP },
+        //	{ 3219, Use3219PvP },
+        //	{ 3022, Use3022PvP },
+        //	{ 1348, Use1348PvP },
+        //	{ 1345, Use1345PvP },
+        //	{ 1344, Use1344PvP },
+        //	{ 1347, Use1347PvP }
+        //};
+        var mitigationStatuses = new Dictionary<StatusID, bool>
+        {
+            //{ StatusID.Phalanx, Target.HasStatus(false, (StatusID)3210)},
+            //{ 3026, Target.HasStatus(false, (StatusID)3026)},
+            //{ 3188, Target.HasStatus(false, (StatusID)3188)},
+            //{ 3186, Target.HasStatus(false, (StatusID)3186)},
+            //{ 3054, Target.HasStatus(false, (StatusID)3054)},
+            //{ 1308, Target.HasStatus(false, (StatusID)1308)},
+            //{ 3036, Target.HasStatus(false, (StatusID)3036)},
+            //{ 3037, Target.HasStatus(false, (StatusID)3037)},
+            //{ 3051, Target.HasStatus(false, (StatusID)3051)},
+            //{ 3047, Target.HasStatus(false, (StatusID)3047)},
+            //{ 3044, Target.HasStatus(false, (StatusID)3044)},
+            //{ 1415, Target.HasStatus(false, (StatusID)1415)},
+            //{ 3086, Target.HasStatus(false, (StatusID)3086)},
+            //{ 3111, Target.HasStatus(false, (StatusID)3111)},
+            //{ 3110, Target.HasStatus(false, (StatusID)3110)},
+            //{ 3087, Target.HasStatus(false, (StatusID)3087)},
+            //{ 3093, Target.HasStatus(false, (StatusID)3093)},
+            //{ 2011, Target.HasStatus(false, (StatusID)2011)},
+            //{ 3186, Target.HasStatus(false, (StatusID)3186)},
+            //{ 1240, Target.HasStatus(false, (StatusID)1240)},
+            //{ 3173, Target.HasStatus(false, (StatusID)3173)},
+            //{ 4096, Target.HasStatus(false, (StatusID)4096)},
+            //{ 4097, Target.HasStatus(false, (StatusID)4097)},
+        };
 
-    //    return false;
-    //}
+        foreach (var status in mitigationStatuses)
+        {
+            if (status.Value && Target.HasStatus(false, (StatusID)status.Key))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 
     private static IBaseAction MarksmansSpitePvP { get; } = new BaseAction((ActionID)29415);

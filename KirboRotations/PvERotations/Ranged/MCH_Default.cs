@@ -2,7 +2,7 @@ namespace KirboRotations.Ranged;
 #pragma warning disable S1066 // Mergeable "if" statements should be combined
 [Rotation("Kirbo", CombatType.PvE, GameVersion = "7.00", Description = "")]
 [SourceCode(Path = "main/DefaultRotations/Ranged/MCH_Default.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class MCH_Default : MachinistRotation
 {
     #region Config Options

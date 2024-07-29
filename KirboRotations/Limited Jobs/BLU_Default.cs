@@ -2,7 +2,7 @@ namespace KirboRotations.Magical;
 
 [Rotation("Kirbo", CombatType.PvE, GameVersion = "7.00")]
 [SourceCode(Path = "main/DefaultRotations/Limited Jobs/BLU_Default.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class Blue_Default : BlueMageRotation
 {
     #region Countdown logic

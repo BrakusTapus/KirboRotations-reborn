@@ -2,7 +2,7 @@ namespace KirboRotations.Ranged;
 
 [Rotation("Kirbo's Forked Default PVP", CombatType.PvP, GameVersion = "7.00", Description = "Forked default Rotation")]
 [SourceCode(Path = "main/DefaultRotations/PVPRotations/Ranged/MCH_Default.PvP.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class MCH_DefaultPvP : MachinistRotation
 {
 	[RotationConfig(CombatType.PvP, Name = "Sprint")]

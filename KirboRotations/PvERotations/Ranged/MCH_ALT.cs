@@ -1,8 +1,9 @@
 namespace KirboRotations.Ranged;
 #pragma warning disable S1066 // Mergeable "if" statements should be combined
-[Rotation("Kirbo new", CombatType.PvE, GameVersion = "7.00", Description = "")]
+[BetaRotation]
+[Rotation("Kirbo new", CombatType.PvE, GameVersion = "7.05", Description = "")]
 [SourceCode(Path = "main/DefaultRotations/Ranged/MCH_Default.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class MCH_ALT : MachinistRotation
 {
     #region Config Options
@@ -31,17 +32,13 @@ public sealed class MCH_ALT : MachinistRotation
     // Defines logic for actions to take during the countdown before combat starts.
     protected override IAction? CountDownAction(float remainTime)
     {
-        if (remainTime < 5)
+        if (remainTime < 4.5f)
         {
             if (ReassemblePvE.CanUse(out var act)) return act;
         }
         if (remainTime < 2)
         {
             if (UseBurstMedicine(out var act)) return act;
-        }
-        if (remainTime < 1 && UseLv100Opener)
-        {
-            StartOpener = true;
         }
         return base.CountDownAction(remainTime);
     }
@@ -61,7 +58,7 @@ public sealed class MCH_ALT : MachinistRotation
         bool isReassembleUsable =
             //Reassemble current # of charges and double proc protection
             ReassemblePvE.Cooldown.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Reassembled) &&
-            (nextGCD.IsTheSameTo(true, [ChainSawPvE, ExcavatorPvE, AirAnchorPvE]) || 
+            (nextGCD.IsTheSameTo(true, [ChainSawPvE, ExcavatorPvE, AirAnchorPvE]) ||
              (!ChainSawPvE.EnoughLevel && nextGCD.IsTheSameTo(true, DrillPvE)) ||
              (!DrillPvE.EnoughLevel && nextGCD.IsTheSameTo(true, CleanShotPvE)) || 
             //HotShot Logic
@@ -72,10 +69,22 @@ public sealed class MCH_ALT : MachinistRotation
         bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
 
         bool inRaids = CustomRotation.TerritoryContentType.Equals(TerritoryContentType.Raids);
+        bool inTrials = CustomRotation.TerritoryContentType.Equals(TerritoryContentType.Trials);
 
-        if (inRaids && CombatElapsedLessGCD(10) && Battery >= 50 && AutomatonQueenPvE.CanUse(out act, true, true, true, true))
+        if ((inRaids || inTrials) && CombatElapsedLessGCD(10))
         {
-            return true;
+            if (IsLastGCD(ActionID.DrillPvE) && BarrelStabilizerPvE.CanUse(out act))
+            {
+                return true;
+            }
+            if (WildfirePvE.CanUse(out act) && nextGCD.IsTheSameTo(ActionID.FullMetalFieldPvE))
+            {
+                return true;
+            }
+            if (Battery >= 50 && AutomatonQueenPvE.CanUse(out act, true, true, true, true))
+            {
+                return true;
+            }
         }
 
         // Attempt to use Reassemble if it's ready
@@ -143,19 +152,13 @@ public sealed class MCH_ALT : MachinistRotation
     // Defines the general logic for determining which global cooldown (GCD) action to take.
     protected override bool GeneralGCD(out IAction? act)
     {
-        if (StartOpener)
-        {
-            return Opener(out act);
-        }
+        bool inRaids = CustomRotation.TerritoryContentType.Equals(TerritoryContentType.Raids);
 
         // Checks and executes AutoCrossbow or HeatBlast if conditions are met (overheated state).
         if (AutoCrossbowPvE.CanUse(out act)) return true;
         if (HeatBlastPvE.CanUse(out act)) return true;
 
-        if (Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
-        {
-            return true;
-        }
+
 
         // Executes Bioblaster, and then checks for AirAnchor or HotShot, and Drill based on availability and conditions.
         if (BioblasterPvE.CanUse(out act)) return true;
@@ -169,13 +172,19 @@ public sealed class MCH_ALT : MachinistRotation
             if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act)) return true;
 
             // Check if Drill can be used
-            if (DrillPvE.CanUse(out act, usedUp: true)) return true;
+            if (DrillPvE.CanUse(out act)) return true;
 
             if (ExcavatorPvE.CanUse(out act, usedUp: true)) return true;
 
             if (ChainSawPvE.CanUse(out act, usedUp: true)) return true;
 
-            if (FullMetalFieldPvE.CanUse(out act, usedUp: true)) return true;
+            if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true)) return true;
+
+            //if (FullMetalFieldPvE.CanUse(out act, usedUp: true)) return true;
+            if (Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
+            {
+                return true;
+            }
         }
 
         // Special condition for using ChainSaw outside of AoE checks if no action is chosen within 4 GCDs.
@@ -242,30 +251,30 @@ public sealed class MCH_ALT : MachinistRotation
 
     private bool CanUseQueenMeow(out IAction? act)
     {
-    // Define conditions under which the Rook Autoturret/Queen can be used.
-    bool NoQueenLogic = SkipQueenLogic;
-    bool QueenOne = Battery >= 60 && CombatElapsedLess(25f);
-    bool QueenTwo = Battery >= 90 && !CombatElapsedLess(58f) && CombatElapsedLess(78f);
-    bool QueenThree = Battery >= 100 && !CombatElapsedLess(111f) && CombatElapsedLess(131f); 
-    bool QueenFour = Battery >= 50 && !CombatElapsedLess(148f) && CombatElapsedLess(168f); 
-    bool QueenFive = Battery >= 60 && !CombatElapsedLess(178f) && CombatElapsedLess(198f); 
-    bool QueenSix = Battery >= 100 && !CombatElapsedLess(230f) && CombatElapsedLess(250f); 
-    bool QueenSeven = Battery >= 50 && !CombatElapsedLess(268f) && CombatElapsedLess(288f); 
-    bool QueenEight = Battery >= 70 && !CombatElapsedLess(296f) && CombatElapsedLess(316f); 
-    bool QueenNine = Battery >= 100 && !CombatElapsedLess(350f) && CombatElapsedLess(370f); 
-    bool QueenTen = Battery >= 50 && !CombatElapsedLess(388f) && CombatElapsedLess(408f); 
-    bool QueenEleven = Battery >= 80 && !CombatElapsedLess(416f) && CombatElapsedLess(436f); 
-    bool QueenTwelve = Battery >= 100 && !CombatElapsedLess(470f) && CombatElapsedLess(490f); 
-    bool QueenThirteen = Battery >= 50 && !CombatElapsedLess(505f) && CombatElapsedLess(525f); 
-    bool QueenFourteen = Battery >= 60 && !CombatElapsedLess(538f) && CombatElapsedLess(558f); 
-    bool QueenFifteen = Battery >= 100 && !CombatElapsedLess(590f) && CombatElapsedLess(610f);
-    
-    if (NoQueenLogic||QueenOne||QueenTwo||QueenThree||QueenFour||QueenFive||QueenSix||QueenSeven||QueenEight||QueenNine||QueenTen||QueenEleven||QueenTwelve||QueenThirteen||QueenFourteen||QueenFifteen)
-    {
-        if (RookAutoturretPvE.CanUse(out act)) return true;
-    }
-    act = null;
-    return false;
+        // Define conditions under which the Rook Autoturret/Queen can be used.
+        bool NoQueenLogic = SkipQueenLogic;
+        bool QueenOne = Battery >= 60 && CombatElapsedLess(25f);
+        bool QueenTwo = Battery >= 90 && !CombatElapsedLess(58f) && CombatElapsedLess(78f);
+        bool QueenThree = Battery >= 100 && !CombatElapsedLess(111f) && CombatElapsedLess(131f);
+        bool QueenFour = Battery >= 50 && !CombatElapsedLess(148f) && CombatElapsedLess(168f);
+        bool QueenFive = Battery >= 60 && !CombatElapsedLess(178f) && CombatElapsedLess(198f);
+        bool QueenSix = Battery >= 100 && !CombatElapsedLess(230f) && CombatElapsedLess(250f);
+        bool QueenSeven = Battery >= 50 && !CombatElapsedLess(268f) && CombatElapsedLess(288f);
+        bool QueenEight = Battery >= 70 && !CombatElapsedLess(296f) && CombatElapsedLess(316f);
+        bool QueenNine = Battery >= 100 && !CombatElapsedLess(350f) && CombatElapsedLess(370f);
+        bool QueenTen = Battery >= 50 && !CombatElapsedLess(388f) && CombatElapsedLess(408f);
+        bool QueenEleven = Battery >= 80 && !CombatElapsedLess(416f) && CombatElapsedLess(436f);
+        bool QueenTwelve = Battery >= 100 && !CombatElapsedLess(470f) && CombatElapsedLess(490f);
+        bool QueenThirteen = Battery >= 50 && !CombatElapsedLess(505f) && CombatElapsedLess(525f);
+        bool QueenFourteen = Battery >= 60 && !CombatElapsedLess(538f) && CombatElapsedLess(558f);
+        bool QueenFifteen = Battery >= 100 && !CombatElapsedLess(590f) && CombatElapsedLess(610f);
+
+        if (NoQueenLogic || QueenOne || QueenTwo || QueenThree || QueenFour || QueenFive || QueenSix || QueenSeven || QueenEight || QueenNine || QueenTen || QueenEleven || QueenTwelve || QueenThirteen || QueenFourteen || QueenFifteen)
+        {
+            if (RookAutoturretPvE.CanUse(out act)) return true;
+        }
+        act = null;
+        return false;
     }
 
     private bool OpenerReady()

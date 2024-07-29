@@ -2,7 +2,7 @@ namespace KirboRotations.Tank;
 
 [Rotation("Kirbo", CombatType.PvE, GameVersion = "7.00")]
 [SourceCode(Path = "main/DefaultRotations/Tank/GNB_Default.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class GNB_Default : GunbreakerRotation
 {
     #region Countdown Logic
@@ -17,6 +17,8 @@ public sealed class GNB_Default : GunbreakerRotation
     #region oGCD Logic
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
+        if (FatedBrandPvE.CanUse(out act)) return true;
+
         if (base.EmergencyAbility(nextGCD, out act)) return true;
 
         if (InCombat && CombatElapsedLess(30))

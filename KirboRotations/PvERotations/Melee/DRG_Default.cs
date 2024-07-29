@@ -2,7 +2,7 @@ namespace KirboRotations.Melee;
 
 [Rotation("Kirbo", CombatType.PvE, GameVersion = "7.00")]
 [SourceCode(Path = "main/DefaultRotations/Melee/DRG_Default.cs")]
-[Api(2)]
+[Api(3)]
 
 public sealed class DRG_Default : DragoonRotation
 {

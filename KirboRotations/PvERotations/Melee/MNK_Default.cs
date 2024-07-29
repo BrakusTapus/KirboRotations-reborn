@@ -2,7 +2,7 @@ namespace KirboRotations.Melee;
 
 [Rotation("Kirbo", CombatType.PvE, GameVersion = "7.00", Description = "Uses Lunar Solar Opener from The Balance")]
 [SourceCode(Path = "main/DefaultRotations/Melee/MNK_Default.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class MNK_Default : MonkRotation
 {
     #region Config Options

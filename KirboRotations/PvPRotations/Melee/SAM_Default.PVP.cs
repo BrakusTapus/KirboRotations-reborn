@@ -2,7 +2,7 @@
 
 [Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.00", Description = "Beta Rotation")]
 [SourceCode(Path = "main/DefaultRotations/PVPRotations/Tank/SAM_Default.PvP.cs")]
-[Api(2)]
+[Api(3)]
 public sealed class SAM_DefaultPvP : SamuraiRotation
 {
     [RotationConfig(CombatType.PvP, Name = "Sprint")]

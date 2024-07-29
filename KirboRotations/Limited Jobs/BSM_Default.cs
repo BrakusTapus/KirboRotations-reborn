@@ -2,7 +2,7 @@
 
 //[Rotation("Kirbo", CombatType.PvE, GameVersion = "7.0")]
 //[SourceCode(Path = "main/DefaultRotations/Limited Jobs/BSM_Default.cs")]
-//[Api(2)]
+//[Api(3)]
 //public sealed class BSM_Default : BeastmasterRotation
 //{
 //    #region Countdown logic
