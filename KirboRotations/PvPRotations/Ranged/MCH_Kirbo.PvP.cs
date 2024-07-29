@@ -7,7 +7,7 @@ using System.ComponentModel;
 namespace KirboRotations.Ranged;
 
 [BetaRotation]
-[Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.01", Description = "Kirbo's Beta Rotation for MCH\nUses LB\nUses Turret")]
+[Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.05", Description = "Kirbo's Beta Rotation for MCH\nUses LB\nUses Turret")]
 [Api(3)]
 internal class MCH_Kirbo_PVP : MachinistRotation
 {
@@ -388,7 +388,7 @@ internal class MCH_Kirbo_PVP : MachinistRotation
         // Marks Man should already be taking into invulns into account
         if (!IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1)
         {
-            if (Target.GetHealthRatio() <= 0.2f && Target.CurrentHp >= 30000)
+            if (Target.CurrentHp < 5000 && Target.CurrentHp >= 25000)
             {
                 return false;
             }
@@ -414,7 +414,7 @@ internal class MCH_Kirbo_PVP : MachinistRotation
         }
 
         // Uses BioBlaster automatically when a Target is in range
-        if (BioblasterPvP.Target.Target.DistanceToPlayer() <= 11 && !IsPvPOverheated && BioblasterPvP.CanUse(out act, usedUp: true, skipAoeCheck: true))
+        if (Target != Player && Target.DistanceToPlayer() < 11 && !IsPvPOverheated && BioblasterPvP.CanUse(out act, usedUp: true, skipAoeCheck: true))
         {
             return true;
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KirboRotations.PvPRotations.Ranged;
-internal class Class1
+namespace KirboRotations.PvERotations.Ranged;
+internal class MCH_TESTER__
 {
 }
