@@ -99,6 +99,7 @@ public class AST_DefaultPVP : AstrologianRotation
     {
         act = null;
         if (GuardCancel && Player.HasStatus(true, StatusID.Guard)) return false;
+        if (CelestialRiverPvP.CanUse(out act)) return true;
 
         if (DrawPvP.CanUse(out act)) return true;
 

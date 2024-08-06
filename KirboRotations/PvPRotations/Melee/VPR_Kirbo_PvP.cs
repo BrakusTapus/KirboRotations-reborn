@@ -1,4 +1,6 @@
-﻿namespace KirboRotations.Melee;
+﻿using KirboRotations.IllegalHelpers;
+
+namespace KirboRotations.Melee;
 
 [Rotation("Kirbo's PVP", CombatType.PvP, GameVersion = "7.0.1", Description = "")]
 [Api(3)]

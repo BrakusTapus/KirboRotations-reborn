@@ -1,15 +1,15 @@
 # To be used with [RotationSolverReborn](https://github.com/FFXIV-CombatReborn/RotationSolverReborn)
-![GitHub all releases](https://img.shields.io/github/downloads/FFXIV-CombatReborn/RebornRotations/total)
+![GitHub all releases](https://img.shields.io/github/downloads/BrakusTapus/KirboRotations/total)
 
 Download the latest version of RebornRotations:
 
-- [`RebornRotations.dll`](https://github.com/FFXIV-CombatReborn/RebornRotations/releases/latest/download/RebornRotations.dll)
+- [`RotatingKirbo.dll`](https://github.com/BrakusTapus/Rotations4Reborn/releases/latest/download/RotatingKirbo.dll)
 
 ```
-https://github.com/FFXIV-CombatReborn/RebornRotations/releases/latest/download/RebornRotations.dll
+https://github.com/BrakusTapus/Rotations4Reborn/releases/latest/download/RotatingKirbo.dll
 ```
-- [`RebornRotations.pdb`](https://github.com/FFXIV-CombatReborn/RebornRotations/releases/latest/download/RebornRotations.pdb)
+- [`RotatingKirbo.pdb`](https://github.com/BrakusTapus/Rotations4Reborn/releases/latest/download/RotatingKirbo.pdb)
 
 ```
-https://github.com/FFXIV-CombatReborn/RebornRotations/releases/latest/download/RebornRotations.pdb
+https://github.com/BrakusTapus/Rotations4Reborn/releases/latest/download/RotatingKirbo.pdb
 ```

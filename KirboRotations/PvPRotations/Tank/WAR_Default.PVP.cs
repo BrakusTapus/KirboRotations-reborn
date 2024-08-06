@@ -1,4 +1,6 @@
-﻿namespace KirboRotations.Tank;
+﻿using KirboRotations.IllegalHelpers;
+
+namespace KirboRotations.Tank;
 
 [Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.00", Description = "Beta Rotation")]
 [SourceCode(Path = "main/DefaultRotations/PVPRotations/Tank/WAR_Default.PvP.cs")]

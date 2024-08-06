@@ -1,0 +1,1207 @@
+//using Dalamud.Game.ClientState.Objects.Enums;
+
+//namespace EasyCombat.Rotations.Ranged;
+
+//[Api(3)]
+//[BetaRotation]
+//[Rotation($"Kirbo's EW expansion MCH rotation", CombatType.PvE, GameVersion = "7.0.0.5", Description = "Something will never be the saaaaaaaame")]
+//[LinkDescription("https://cdn.discordapp.com/attachments/1255678344377274501/1256042473646723163/Machinist_Standard_Opener_AA_6.png?ex=66a8db75&is=66a789f5&hm=07a4752ede53e93445242bf91983c8c47ab88c3ea0671a380cb838529a9c5e9a&", "Standard Opener")]
+//[LinkDescription("https://cdn.discordapp.com/attachments/1255678344377274501/1257574614100475955/Machinist_Static_2-Minute_Burst_Carrying_Combo.png?ex=66a92860&is=66a7d6e0&hm=f7ccd0f98df292a2cc7a73f4f93b9ec79f4f8d63db7711b4e3ef3cee8c805f86&", "Static 2-Minute Burst")]
+//[LinkDescription("https://cdn.discordapp.com/attachments/1255678344377274501/1257574659575124009/Machinist_Static_2-Minute_Burst_Combo_Neutral__10x_Blazing_Shot.png?ex=66a9286b&is=66a7d6eb&hm=bf0b8319774a641b61109874674d668f8a39fbeaf13d76232d12730928be8ade&", "Static 2-Minute Burst")]
+//[LinkDescription("", "FFXIV Burst Analysis")]
+
+//public sealed class MCH_KirboPvE_Beta : MCH_Base
+//{
+//    #region Rotation Info
+//    public override string GameVersion => CurrentVersion;
+
+//    public override string RotationName => $"{HighEnd}'s BETA {ClassJob.Abbreviation} [{Type}]";
+//    public override CombatType Type => CombatType.PvE;    
+//    #endregion Rotation Info
+
+//    public override bool ShowStatus
+//    {
+//        get
+//        {
+//            return true;
+//        }
+//    }
+
+//    public override void DisplayStatus()
+//    {
+//        RotationConfigHelper.SetRotationOpeners("Early AA", "Delayed Tools");
+//        RotationConfigHelper.CurrentRotationSelection = Configs.GetCombo("RotationSelection");
+
+//        try
+//        {
+//            if (ImGui.Button("Reset Opener Properties"))
+//            {
+//                ResetOpenerProperties();
+//            }
+
+//            ImGui.TextWrapped($"RotationSelection: {RotationConfigHelper.CurrentRotationSelection}");
+//            ImGui.TextWrapped($"Target.IsEnemy: {CustomRotation.Target.IsEnemy()}");
+//            ImGuiHelper.SpacingWithSeperator();
+//            ImGui.TextWrapped($"IsInUCoB: {DataCenter.IsInUCoB}");
+//            ImGui.TextWrapped($"IsInUwU: {DataCenter.IsInUwU}");
+//            ImGui.TextWrapped($"IsInTEA: {DataCenter.IsInTEA}");
+//            ImGui.TextWrapped($"IsInDSR: {DataCenter.IsInDSR}");
+//            ImGui.TextWrapped($"IsInTOP: {DataCenter.IsInTOP}");
+//            ImGuiHelper.SpacingWithSeperator();
+//            ImGui.Text($"StatusTime PvE_Wildfire: {Player.StatusTime(true, StatusID.Wildfire)}");
+//            int numberOfTargets = DataCenter.TargetsOnMyTarget.Count();
+//            ImGui.TextWrapped($"TargetsOnMyTarget: {numberOfTargets}");
+//            ImGui.TextWrapped($"TarOnMe: {DataCenter.TargetsOnMe.Count()}");
+//            ImGui.TextWrapped($"InCombatNEW Method: {Player.InCombat()}");
+//            ImGuiHelper.SpacingWithSeperator();
+//            ImGui.TextWrapped($"InBurstMCH: {InBurstMCH}");
+//            ImGui.TextWrapped($"HeatStacks: {HeatStacks}");
+//            ImGui.TextWrapped($"OverheatTime remaining: {OverheatTime}s");
+//            ImGui.TextWrapped($"Is RobotActive: {IsRobotActive}s");
+//            ImGui.TextWrapped($"LastSummonBatteryPower: {LastSummonBatteryPower}");
+//            ImGui.TextWrapped($"WillhaveTool: {WillhaveToolSoon}");
+//            ImGuiHelper.SpacingWithSeperator();
+//            ImGui.TextWrapped($"OpenerActionsAvailable: {OpenerActionsAvailable}");
+//            ImGui.TextWrapped($"OpenerActionsNoCountdownAvailable: {OpenerActionsNoCountdown}");
+
+//            ImGui.TextWrapped($"UCoBOpenerActions: {UCoBOpenerActions}");
+//            ImGui.TextWrapped($"UwUOpenerActions: {UwUOpenerActions}");
+//            ImGui.TextWrapped($"UCoBOpenerActions: {TEAOpenerActions}");
+//            ImGui.TextWrapped($"UwUOpenerActions: {DSROpenerActions}");
+//            ImGui.TextWrapped($"UCoBOpenerActions: {TOPOpenerActions}");
+//            ImGuiHelper.SpacingWithSeperator();
+//            ImGui.TextWrapped($"IsCountdownActive: {Countdown.IsCountdownActive}");
+//            ImGui.TextWrapped($"OpenerInProgress: {OpenerInProgres}");
+//            ImGui.TextWrapped($"Openerstep: {Openerstep}");
+//            ImGui.TextWrapped($"OpenerHasFinished: {OpenerHasFinished}");
+//            ImGui.TextWrapped($"OpenerHasFailed: {OpenerHasFailed}");
+//            ImGuiHelper.SpacingWithSeperator();
+//            ImGui.TextWrapped($"SaveAction: {BattleCharaEx.SaveAction}");
+
+//        }
+//        catch (Exception ex)
+//        {
+//            Serilog.Log.Warning($"{ex}");
+//        }
+//    }
+
+
+//    private new static IBaseAction PvE_HotShot { get; } = new BaseAction(ActionID.PvE_HotShot, ActionOption.Attack)
+//    {
+//        ActionCheck = (IBattleChara b, bool m) =>
+//            (!IsOverheated) || (!Player.HasStatus(true, StatusID.Wildfire)),
+//    };
+//    private new static IBaseAction PvE_AirAnchor { get; } = new BaseAction(ActionID.PvE_AirAnchor, ActionOption.Attack)
+//    {
+//        ActionCheck = (b, m) => !IsOverheated,
+//    };
+//    private new static IBaseAction PvE_Drill { get; } = new BaseAction(ActionID.PvE_Drill, ActionOption.Attack)
+//    {
+//        ActionCheck = (b, m) => !IsOverheated,
+//    };
+//    private new static IBaseAction PvE_Bioblaster { get; } = new BaseAction(ActionID.PvE_Bioblaster, ActionOption.Dot)
+//    {
+//        ActionCheck = (b, m) => !IsOverheated && Target.GetTimeToKill(false) > 20f,
+//    };
+//    private new static IBaseAction PvE_RookAutoturret { get; } = new BaseAction(ActionID.PvE_RookAutoturret, ActionOption.UseResources)
+//    {
+//        ActionCheck = (b, m) => Battery >= 50 && !IsRobotActive,
+//    };
+//    private new static IBaseAction PvE_ChainSaw { get; } = new BaseAction(ActionID.PvE_ChainSaw, ActionOption.Attack)
+//    {
+//        ActionCheck = (b, m) => !IsOverheated,
+//    };
+//    private new static IBaseAction PvE_Excavator { get; } = new BaseAction(ActionID.PvE_Excavator, ActionOption.Attack)
+//    {
+//        ActionCheck = (b, m) => !IsOverheated,
+//    };
+//    private new static IBaseAction PvE_Reassemble { get; } = new BaseAction(ActionID.PvE_Reassemble, ActionOption.Buff)
+//    {
+//        StatusProvide = new StatusID[] { StatusID.Reassembled },
+//        ActionCheck = (b, m) => !Player.HasStatus(true, StatusID.Reassembled),
+//    };
+//    private new static IBaseAction PvE_Hypercharge { get; } = new BaseAction(ActionID.PvE_Hypercharge, ActionOption.UseResources)
+//    {
+//        StatusProvide = new StatusID[1] { StatusID.Overheated },
+//        ActionCheck = (IBattleChara b, bool m) => !IsOverheated && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)),
+//    };
+//    private new static IBaseAction PvE_FullMetalField { get; } = new BaseAction(ActionID.PvE_FullMetalField, ActionOption.Attack)
+//    {
+//        StatusNeed = new StatusID[1] { StatusID.FullMetalMachinist },
+//        ActionCheck = (b, m) => !IsOverheated,
+//    };
+
+//    protected override IRotationConfigSet CreateConfiguration() =>
+//        base.CreateConfiguration()
+//            .SetCombo(
+//                CombatType.PvE, "RotationSelection", 0,
+//                "Select which Rotation will be used. (Openers will only be followed at level 90)",
+//                "Early AA", "Delayed Tools" /*, "Early All"*/)
+//            .SetBool(
+//                CombatType.PvE, "BatteryStuck", false,
+//                "Battery overcap protection\n(Will try and use Rook AutoTurret if Battery is at 100 and next skill increases Battery)")
+//            .SetBool(
+//                CombatType.PvE, "HeatStuck", false,
+//                "Heat overcap protection\n(Will try and use HyperCharge if Heat is at 100 and next skill increases Heat)")
+//            .SetBool(
+//                CombatType.PvE, "DumpSkills", false,
+//                "Dump Skills when Target is dying\n(Will try and spend remaining resources before boss dies)")
+//            .SetBool(
+//                CombatType.PvE, "NoWaste", false,
+//                "(NO ACTUAL CODE IMPLEMENTED YET)\nTries to save important actions for Boss\n(Example: If Boss is out of reach and you're stuck killing adds)");
+
+//    protected override IAction CountDownAction(float remainTime)
+//    {
+//        TerritoryContentType Content = TerritoryContentType;
+//        bool UltimateRaids = (int)Content == 28;
+
+//        if (OpenerActionsAvailable)
+//        {
+//            // (Default: Delayed Tool)
+//            switch (Configs.GetCombo("RotationSelection"))
+//            {
+//                case 0:  // Early AA
+//                    if (remainTime < CountDownAhead)
+//                    {
+//                        if (PvE_AirAnchor.CanUse(out var act1)) return act1;
+//                        else if (!PvE_AirAnchor.EnoughLevel && PvE_HotShot.CanUse(out act1)) return act1;
+//                    }
+//                    if (remainTime < 1.7f && UseBurstMedicine(out var act)) return act;
+//                    if (remainTime < 5 && PvE_Reassemble.CanUse(out act, CanUseOption.EmptyOrSkipCombo | CanUseOption.IgnoreClippingCheck)) return act;
+//                    break;
+
+//                case 1:  // Delayed Tools
+//                    if (remainTime <= PvE_SplitShot.AnimationLockTime && PvE_SplitShot.CanUse(out _))
+//                    {
+//                        OpenerInProgres = true;
+//                        return PvE_SplitShot;
+//                    }
+
+//                    IAction act2;
+//                    if (remainTime <= PvE_SplitShot.AnimationLockTime + TinctureOfDexterity8.AnimationLockTime && UseBurstMedicine(out act2, false))
+//                    {
+//                        return act2;
+//                    }
+//                    break;
+//            }
+//        }
+
+//        if (Player.Level < 90 && !UltimateRaids)
+//        {
+//            if (PvE_AirAnchor.EnoughLevel && remainTime <= 0.6 + CountDownAhead && PvE_AirAnchor.CanUse(out _))
+//            {
+//                return PvE_AirAnchor;
+//            }
+//            if (!PvE_AirAnchor.EnoughLevel && PvE_Drill.EnoughLevel && remainTime <= 0.6 + CountDownAhead && PvE_Drill.CanUse(out _))
+//            {
+//                return PvE_Drill;
+//            }
+//            if (!PvE_AirAnchor.EnoughLevel && !PvE_Drill.EnoughLevel && PvE_HotShot.EnoughLevel && remainTime <= 0.6 + CountDownAhead && PvE_HotShot.CanUse(out _))
+//            {
+//                return PvE_HotShot;
+//            }
+//            if (!PvE_AirAnchor.EnoughLevel && !PvE_Drill.EnoughLevel && !PvE_HotShot.EnoughLevel && remainTime <= 0.6 + CountDownAhead && PvE_CleanShot.CanUse(out _))
+//            {
+//                return PvE_CleanShot;
+//            }
+//            if (remainTime < 5f && PvE_Reassemble.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Reassembled))
+//            {
+//                return PvE_Reassemble;
+//            }
+//        }
+
+//        if (UltimateRaids)
+//        {
+//            if (IsInUCoB || IsInUwU)
+//            {
+//                if (remainTime <= PvE_Drill.AnimationLockTime && Player.HasStatus(true, StatusID.Reassembled) && PvE_Drill.CanUse(out _))
+//                {
+//                    return PvE_Drill;
+//                }
+//                if (remainTime < 5f && PvE_Reassemble.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Reassembled))
+//                {
+//                    return PvE_Reassemble;
+//                }
+//                return base.CountDownAction(remainTime);
+//            }
+//            if (IsInTEA)
+//            {
+//                if (remainTime <= PvE_AirAnchor.AnimationLockTime && Player.HasStatus(true, StatusID.Reassembled) && PvE_AirAnchor.CanUse(out _))
+//                {
+//                    return PvE_AirAnchor;
+//                }
+//                if (remainTime < 5f && PvE_Reassemble.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Reassembled))
+//                {
+//                    return PvE_Reassemble;
+//                }
+//                return base.CountDownAction(remainTime);
+//            }
+//            return base.CountDownAction(remainTime);
+//        }
+
+//        return base.CountDownAction(remainTime);
+//    }
+
+//    protected override bool EmergencyGCD(out IAction? act)
+//    {
+//        act = null;
+
+//        if (Player.HasStatus(true, StatusID.Transcendent) && Player.StatusTime(true, StatusID.Transcendent) > 0)
+//        {
+//            // Logic when the player is recently revived
+//            return false;
+//        }
+
+//        if (OpenerInProgres)
+//        {
+//            return Opener(out act);
+//        }
+
+//        if (AutoCrossbow.CanUse(out act, (CanUseOption)1, 2) && Target.IsEnemy() &&
+//            Target.DistanceToPlayer() <= 12f)
+//        {
+//            return true;
+//        }
+//        if (PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            return true;
+//        }
+//        if (Target.GetHealthRatio() > 0.8 && AverageTimeToKillLongerThan(15) &&
+//            PvE_Bioblaster.CanUse(out act, (CanUseOption)1, 2) && Target.IsEnemy() &&
+//            Target.DistanceToPlayer() <= 12f)
+//        {
+//            return true;
+//        }
+//        if (PvE_FullMetalField.CanUse(out act, CanUseOption.MustUse) && !IsOverheated)
+//        {
+//            return true;
+//        }
+//        if (PvE_Excavator.CanUse(out act, CanUseOption.MustUse) && !IsOverheated)
+//        {
+//            return true;
+//        }
+//        if (PvE_AirAnchor.CanUse(out act, CanUseOption.MustUse) && !IsOverheated)
+//        {
+//            return true;
+//        }
+//        if (PvE_Drill.CanUse(out act, CanUseOption.MustUseEmpty) && !IsOverheated)
+//        {
+//            return true;
+//        }
+//        if (!PvE_AirAnchor.EnoughLevel &&
+//            PvE_HotShot.CanUse(out act, CanUseOption.MustUse) && !IsOverheated)
+//        {
+//            return true;
+//        }
+//        if (PvE_ChainSaw.CanUse(out act, CanUseOption.MustUse) && !IsOverheated)
+//        {
+//            return true;
+//        }
+//        if (PvE_SpreadShot.CanUse(out act, (CanUseOption)1, 2))
+//        {
+//            return true;
+//        }
+//        if (PvE_CleanShot.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            if (PvE_Drill.EnoughLevel && PvE_Drill.WillHaveOneCharge(WeaponRemain))
+//            {
+//                return false;
+//            }
+//            return true;
+//        }
+//        if (PvE_SlugShot.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            if (PvE_Drill.EnoughLevel && PvE_Drill.WillHaveOneCharge(WeaponRemain))
+//            {
+//                return false;
+//            }
+//            return true;
+//        }
+//        if (PvE_SplitShot.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            if (PvE_Drill.EnoughLevel && PvE_Drill.WillHaveOneCharge(WeaponRemain))
+//            {
+//                return false;
+//            }
+//            return true;
+//        }
+//        return base.EmergencyGCD(out act);
+//    }
+
+//    protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
+//    {
+//        act = null;
+
+//        if (Player.HasStatus(true, StatusID.Transcendent) && Player.StatusTime(true, StatusID.Transcendent) > 0) { return false; }
+//        if (OpenerInProgres) { return Opener(out act); }
+//        if (ShouldUseBurstMedicine(out act)) { return true; }
+
+//        #region Config related
+//        if (Configs.GetBool("BatteryStuck") && Battery == 100 && PvE_RookAutoturret.CanUse(out act, CanUseOption.MustUseEmpty) && (nextGCD == PvE_ChainSaw || nextGCD == PvE_AirAnchor || nextGCD == PvE_CleanShot))
+//        {
+//            return true;
+//        }
+//        if (Configs.GetBool("HeatStuck") && Heat == 100 && PvE_Hypercharge.CanUse(out act, CanUseOption.MustUseEmpty) && (nextGCD == PvE_SplitShot || nextGCD == PvE_SlugShot || nextGCD == PvE_CleanShot))
+//        {
+//            return true;
+//        }
+//        if (DumpSkills(nextGCD, out act) && Configs.GetBool("DumpSkills") && HostileTarget.IsDying() && HostileTarget.IsBossFromIcon())
+//        {
+//            return true;
+//        }
+//        #endregion
+
+//        // LvL 90+
+//        if (!OpenerInProgres && Player.Level >= 100)
+//        {
+//            if (ShouldUseWildfireAbility(nextGCD, out act))
+//            {
+//                return true;
+//            }
+//            if (PvE_BarrelStabilizer.CanUse(out act, CanUseOption.MustUseEmpty))
+//            {
+//                if (PvE_Wildfire.RemainingRecastTime <= 40 && Heat >= 40)
+//                {
+//                    return false;
+//                }
+//                else if (PvE_Wildfire.WillHaveOneChargeGCD() && PvE_Wildfire.RemainingRecastTime > 0 && Heat < 50)
+//                {
+//                    return true;
+//                }
+//                else if (PvE_Wildfire.IsCoolingDown && IsLastGCD(ActionID.PvE_Drill))
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_Wildfire.IsCoolingDown && IsLastGCD(ActionID.PvE_Drill))
+//                {
+//                    return true;
+//                }
+//                else if (IsOverheated)
+//                {
+//                    return true;
+//                }
+//            }
+//            if (PvE_Reassemble.CanUse(out act, CanUseOption.MustUseEmpty))
+//            {
+//                if (PvE_Reassemble.CurrentCharges > 1 || (PvE_Reassemble.CurrentCharges == 1 && PvE_Reassemble.RemainingRecastTime < 20))
+//                {
+//                    if (nextGCD == PvE_ChainSaw || nextGCD == PvE_AirAnchor || nextGCD == PvE_Drill || nextGCD == PvE_Excavator)
+//                    {
+//                        return true;
+//                    }
+//                }
+//                else if (nextGCD.IsTheSameTo(true, PvE_Excavator))
+//                {
+//                    return true;
+//                }
+//                else if (nextGCD.IsTheSameTo(false, PvE_ChainSaw))
+//                {
+//                    return true;
+//                }
+//                else if (nextGCD.IsTheSameTo(true, PvE_AirAnchor) && !PvE_Wildfire.WillHaveOneCharge(55f))
+//                {
+//                    return true;
+//                }
+//                else if (nextGCD.IsTheSameTo(false, PvE_Drill) && !PvE_Wildfire.WillHaveOneCharge(55f))
+//                {
+//                    return true;
+//                }
+//                else if (PvE_ChainSaw.EnoughLevel && (nextGCD == PvE_Drill || nextGCD == PvE_ChainSaw))
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_ChainSaw.EnoughLevel && PvE_AirAnchor.EnoughLevel && (nextGCD == PvE_Drill || nextGCD == PvE_AirAnchor))
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_ChainSaw.EnoughLevel && !PvE_AirAnchor.EnoughLevel && PvE_Drill.EnoughLevel && (nextGCD == PvE_Drill))
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_ChainSaw.EnoughLevel && !PvE_AirAnchor.EnoughLevel && !PvE_Drill.EnoughLevel && PvE_CleanShot.EnoughLevel && (nextGCD == PvE_CleanShot))
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_ChainSaw.EnoughLevel && !PvE_AirAnchor.EnoughLevel && !PvE_Drill.EnoughLevel && !PvE_CleanShot.EnoughLevel && PvE_Reassemble.EnoughLevel && (nextGCD == PvE_SlugShot))
+//                {
+//                    return true;
+//                }
+//            }
+//            if (PvE_RookAutoturret.CanUse(out act, CanUseOption.MustUse) && Target.IsEnemy() && Target.IsTargetable && InCombatNew)
+//            {
+//                if (!Target.IsBossFromTTK() && Target.GetTimeToKill(false) < 15)
+//                {
+//                    return false;
+//                }
+//                else if (InBurstMCH && CombatElapsedLess(30))
+//                {
+//                    return true;
+//                }
+//                else if (CombatElapsedLess(60f) && !CombatElapsedLess(48f) && Battery >= 50)
+//                {
+//                    return true;
+//                }
+//                else if (PvE_Wildfire.IsCoolingDown && PvE_Wildfire.RemainingRecastTime <= 15 && !InBurstMCH)
+//                {
+//                    return true;
+//                }
+//                else if (Battery >= 100 && (nextGCD == PvE_AirAnchor || nextGCD == PvE_CleanShot || nextGCD == PvE_HotShot || nextGCD == PvE_ChainSaw))
+//                {
+//                    return true;
+//                }
+//                else if (Battery >= 90 && (nextGCD == PvE_AirAnchor || nextGCD == PvE_ChainSaw || nextGCD == PvE_HotShot))
+//                {
+//                    return true;
+//                }
+//                else if (Battery >= 90 && !PvE_Wildfire.ElapsedAfter(70f))
+//                {
+//                    return true;
+//                }
+//                else if (Battery >= 80 && !PvE_Wildfire.ElapsedAfter(77.5f) && IsLastGCD((ActionID)16500))
+//                {
+//                    return true;
+//                }
+//                else if (InBurstMCH && IsOverheated)
+//                {
+//                    return true;
+//                }
+//            }
+//            if (ShouldUseHypercharge(out act))
+//            {
+//                return true;
+//            }
+//        }
+
+//        // LvL 30-89 and Casual Content
+//        if (!OpenerInProgres && Player.Level < 100)
+//        {
+
+//            if (PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility) && (Heat >= 50 || IsOverheated) && (Target.GetTimeToKill(false) > 15))
+//            {
+//                return true;
+//            }
+
+//            // if (PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility) && Target.IsBossFromTTK() && (IsLastAbility(false, PvE_Hypercharge) || Heat >= 50 || (IsOverheated && HeatStacks > 4)))
+//            // { return true; }
+
+//            if (PvE_Reassemble.CurrentCharges > 0 && PvE_Reassemble.CanUse(out act, CanUseOption.MustUseEmpty))
+//            {
+//                if ((nextGCD == PvE_Drill || nextGCD == PvE_AirAnchor))
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_Drill.EnoughLevel && nextGCD == PvE_CleanShot)
+//                {
+//                    return true;
+//                }
+//                else if (!PvE_CleanShot.EnoughLevel && nextGCD == PvE_HotShot)
+//                {
+//                    return true;
+//                }
+//            }
+//            if (PvE_BarrelStabilizer.CanUse(out act) && Target.IsEnemy() && Target.IsTargetable)
+//            {
+//                return true;
+//            }
+//            if (PvE_Hypercharge.CanUse(out act) && InCombatNew && Target.IsEnemy() && Target.IsTargetable)
+//            {
+//                if (Player.HasStatus(true, StatusID.Wildfire, StatusID.Wildfire_1946)) { return true; }
+//                if (Target.GetTimeToKill(false) > 8 && Heat == 100 && !WillhaveToolSoon) { return true; }
+//                if (Target.GetTimeToKill(false) > 8 && (PvE_Wildfire.RemainingRecastTime > 60 || !PvE_Wildfire.IsCoolingDown) && !WillhaveToolSoon) { return true; }
+//            }
+//            if (PvE_RookAutoturret.CanUse(out act) && Target.IsEnemy() && Target.IsTargetable && InCombatNew)
+//            {
+//                bool isboss = Target.IsBossFromIcon() || Target.IsBossFromTTK();
+//                if (Target.GetTimeToKill(false) > 15 && isboss) { return true; }
+//                if (Target.GetTimeToKill(false) > 15 && !isboss && CombatElapsedLess(30f)) { return true; }
+//            }
+//        }
+
+//        if (ShouldUseGaussroundOrRicochet(out act)) { return true; }
+
+//        return base.EmergencyAbility(nextGCD, out act);
+//    }
+
+
+//    private bool TargetName(string name)
+//    {
+//        if (Target.Name.ToString() == name)
+//        {
+//            return true;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//    }
+//    private bool IsEnemyNPC()
+//    {
+//        if (Target.ObjectKind == ObjectKind.BattleNpc)
+//        {
+//            return true;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//    }
+
+//    public bool Opener(out IAction? act)
+//    {
+//        if (OpenerInProgres)
+//        {
+//            switch (Configs.GetCombo("RotationSelection"))
+//            {
+//                case 0:  // Early AA
+//                    switch (Openerstep)
+//                    {
+//                        case 0:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_AirAnchor),
+//                                PvE_AirAnchor.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 1:
+//                            return OpenerController(IsLastAbility(false, PvE_GaussRound), PvE_GaussRound.CanUse(out act, CanUseOption.MustUseEmpty));
+
+//                        case 2:
+//                            return OpenerController(IsLastAbility(false, PvE_Ricochet), PvE_Ricochet.CanUse(out act, CanUseOption.MustUseEmpty));
+
+//                        case 3:
+//                            return OpenerController(IsLastGCD(false, PvE_Drill), PvE_Drill.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 4:
+//                            return OpenerController(IsLastAbility(false, PvE_BarrelStabilizer), PvE_BarrelStabilizer.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 5:
+//                            return OpenerController(IsLastGCD(true, PvE_ChainSaw), PvE_ChainSaw.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 6:
+//                            return OpenerController(
+//                                IsLastGCD(true, PvE_Excavator),
+//                                PvE_Excavator.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 7:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_RookAutoturret),
+//                                PvE_RookAutoturret.CanUse(out act,
+//                                                CanUseOption.MustUseEmpty));
+
+//                        case 8:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_Reassemble),
+//                                PvE_Reassemble.CanUse(out act,
+//                                                  CanUseOption.MustUseEmpty));
+
+//                        case 9:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_Drill),
+//                                PvE_Drill.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 10:
+//                            return OpenerController(
+//                                IsLastAbility(true, PvE_GaussRound),
+//                                PvE_GaussRound.CanUse(out act,
+//                                                      CanUseOption.MustUse));
+
+//                        case 11:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_Wildfire),
+//                                PvE_Wildfire.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 12:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_FullMetalField),
+//                                PvE_Hypercharge.CanUse(out act, (CanUseOption)51));
+
+//                        case 13:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_Hypercharge),
+//                                PvE_Hypercharge.CanUse(out act,
+//                                                CanUseOption.MustUseEmpty));
+
+//                        case 14:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_HeatBlast) &&
+//                                    HeatStacks == 4,
+//                                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 15:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_Ricochet),
+//                                PvE_Ricochet.CanUse(out act,
+//                                                CanUseOption.MustUseEmpty));
+
+//                        case 16:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_HeatBlast) &&
+//                                    HeatStacks == 3,
+//                                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 17:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_GaussRound),
+//                                PvE_GaussRound.CanUse(out act,
+//                                                  CanUseOption.MustUseEmpty));
+
+//                        case 18:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_HeatBlast) &&
+//                                    HeatStacks == 2,
+//                                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 19:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_Ricochet),
+//                                PvE_Ricochet.CanUse(out act,
+//                                                CanUseOption.MustUseEmpty));
+
+//                        case 20:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_HeatBlast) &&
+//                                    HeatStacks == 1,
+//                                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 21:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_GaussRound),
+//                                PvE_GaussRound.CanUse(out act,
+//                                                  CanUseOption.MustUseEmpty));
+
+//                        case 22:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_HeatBlast) &&
+//                                    HeatStacks == 0,
+//                                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 23:
+//                            return OpenerController(
+//                                IsLastAbility(false, PvE_Ricochet),
+//                                PvE_Ricochet.CanUse(out act,
+//                                                CanUseOption.MustUseEmpty));
+
+//                        case 24:
+//                            return OpenerController(
+//                                IsLastGCD(false, PvE_Drill),
+//                                PvE_Drill.CanUse(out act, CanUseOption.MustUse));
+
+//                        case 25:
+//                            OpenerHasFinished = true;
+//                            break;
+//                    }
+//                    break;
+
+//                //case 1:  // Delayed Tools
+//                //    switch (Openerstep)
+//                //    {
+//                //        case 0:
+//                //            return OpenerController(
+//                //                IsLastGCD(true, PvE_SplitShot),
+//                //                PvE_SplitShot.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 1:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 2:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty));
+
+//                //        case 3:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_Drill),
+//                //                PvE_Drill.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 4:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_BarrelStabilizer),
+//                //                PvE_BarrelStabilizer.CanUse(out act,
+//                //                                        CanUseOption.MustUse));
+
+//                //        case 5:
+//                //            return OpenerController(
+//                //                IsLastGCD(true, PvE_SlugShot),
+//                //                PvE_SlugShot.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 6:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty));
+
+//                //        case 7:
+//                //            return OpenerController(
+//                //                IsLastGCD(true, PvE_CleanShot),
+//                //                PvE_CleanShot.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 8:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Reassemble),
+//                //                PvE_Reassemble.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 9:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 10:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_AirAnchor),
+//                //                PvE_AirAnchor.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 11:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Reassemble),
+//                //                PvE_Reassemble.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 12:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Wildfire),
+//                //                PvE_Wildfire.CanUse(out act, (CanUseOption)17));
+
+//                //        case 13:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_ChainSaw),
+//                //                PvE_ChainSaw.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 14:
+//                //            return OpenerController(
+//                //                IsLastAbility(true, PvE_RookAutoturret),
+//                //                PvE_RookAutoturret.CanUse(out act,
+//                //                                      CanUseOption.MustUse));
+
+//                //        case 15:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Hypercharge),
+//                //                PvE_Hypercharge.CanUse(out act, (CanUseOption)51));
+
+//                //        case 16:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_HeatBlast) &&
+//                //                    HeatStacks == 4,
+//                //                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 17:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty));
+
+//                //        case 18:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_HeatBlast) &&
+//                //                    HeatStacks == 3,
+//                //                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 19:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 20:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_HeatBlast) &&
+//                //                    HeatStacks == 2,
+//                //                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 21:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty));
+
+//                //        case 22:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_HeatBlast) &&
+//                //                    HeatStacks == 1,
+//                //                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 23:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 24:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_HeatBlast) &&
+//                //                    HeatStacks == 0,
+//                //                PvE_HeatBlast.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 25:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty));
+
+//                //        case 26:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_Drill),
+//                //                PvE_Drill.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 27:
+//                //            OpenerHasFinished = true;
+//                //            OpenerInProgres = false;
+//                //            break;
+//                //    }
+//                //    break;
+
+//                //case 2:  // Early All
+//                //    switch (Openerstep)
+//                //    {
+//                //        case 0:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_AirAnchor),
+//                //                PvE_AirAnchor.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 1:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_BarrelStabilizer),
+//                //                PvE_BarrelStabilizer.CanUse(out act,
+//                //                                        CanUseOption.MustUseEmpty));
+
+//                //        case 2:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty |
+//                //                                      CanUseOption.OnLastAbility));
+
+//                //        case 3:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_Drill),
+//                //                PvE_Drill.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 4:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Reassemble),
+//                //                PvE_Reassemble.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 5:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty |
+//                //                                    CanUseOption.OnLastAbility));
+
+//                //        case 6:
+//                //            return OpenerController(
+//                //                IsLastGCD(false, PvE_ChainSaw),
+//                //                PvE_ChainSaw.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 7:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 8:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty |
+//                //                                    CanUseOption.OnLastAbility));
+
+//                //        case 9:
+//                //            return OpenerController(
+//                //                IsLastGCD(true, PvE_SplitShot),
+//                //                PvE_SplitShot.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 10:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_GaussRound),
+//                //                PvE_GaussRound.CanUse(out act,
+//                //                                  CanUseOption.MustUseEmpty));
+
+//                //        case 11:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Ricochet),
+//                //                PvE_Ricochet.CanUse(out act,
+//                //                                CanUseOption.MustUseEmpty |
+//                //                                    CanUseOption.OnLastAbility));
+
+//                //        case 12:
+//                //            return OpenerController(
+//                //                IsLastGCD(true, PvE_SlugShot),
+//                //                PvE_SlugShot.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 13:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Tactician),
+//                //                PvE_Tactician.CanUse(out act,
+//                //                                 CanUseOption.MustUseEmpty));
+
+//                //        case 14:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Wildfire),
+//                //                PvE_Wildfire.CanUse(out act,
+//                //                                CanUseOption.OnLastAbility));
+
+//                //        case 15:
+//                //            return OpenerController(
+//                //                IsLastGCD(true, PvE_CleanShot),
+//                //                PvE_CleanShot.CanUse(out act, CanUseOption.MustUse));
+
+//                //        case 16:
+//                //            return OpenerController(
+//                //                IsLastAbility(true, PvE_RookAutoturret),
+//                //                PvE_RookAutoturret.CanUse(out act,
+//                //                                      CanUseOption.MustUse));
+
+//                //        case 17:
+//                //            return OpenerController(
+//                //                IsLastAbility(false, PvE_Hypercharge),
+//                //                PvE_Hypercharge.CanUse(out act,
+//                //                                   CanUseOption.OnLastAbility));
+
+//                //        case 18:
+//                //            OpenerHasFinished = true;
+//                //            break;
+//                //    }
+//                //    break;
+//            }
+//        }
+//        act = null;
+//        return false;
+//    }
+//    private bool ShouldUseBurstMedicine(out IAction? act)
+//    {
+//        act = null;  // Default to null if Tincture cannot be used.
+
+//        // Don't use Tincture if player has a bad status
+//        if (Player.HasStatus(false, StatusID.Weakness) || Player.HasStatus(true, StatusID.Transcendent) || Player.HasStatus(true, StatusID.BrinkofDeath))
+//        {
+//            return false;
+//        }
+
+//        // Check if the conditions for using Burst Medicine are met:
+//        // PvE_Wildfire's CD is less then 20s
+//        // Combat has been ongoing for atleast 60s
+//        // Atleast 1.2s left in oGCD window
+//        // Again as a double fail safe, Player does not have the weakness debuff
+//        // TinctureTier 6/7/8 are NOT on cooldown (Should be fine as when either 1
+//        // is on cooldown the others are as well, might remove lower tier tinctures
+//        // at some point) PvE_Drill's CD is 3s or less
+//        if (PvE_Wildfire.RemainingRecastTime <= 20 && CombatTime > 60 &&
+//            NextAbilityToNextGCD > 1.2 &&
+//            !Player.HasStatus(true, StatusID.Weakness) &&
+//            !TinctureOfDexterity6.IsCoolingDown &&
+//            !TinctureOfDexterity7.IsCoolingDown &&
+//            !TinctureOfDexterity8.IsCoolingDown &&
+//            PvE_Drill.RemainingRecastTime < 5 &&
+//            PvE_AirAnchor.RemainingRecastTime < 5)
+//        {
+//            // Attempt to use Burst Medicine.
+//            return UseBurstMedicine(out act, false);
+//        }
+//        // If the conditions are not met, return false.
+//        return false;
+//    }
+//    private bool ShouldUseWildfireAbility(IAction nextGCD, out IAction? act)
+//    {
+//        act = null;
+
+//        if (!Target.IsEnemy() || !Target.IsBossFromTTK() || Target.GetTimeToKill(true) <= 90)
+//        {
+//            return false;
+//        }
+//        else if (IsOverheated && nextGCD == PvE_HeatBlast)
+//        {
+//            return PvE_Wildfire.CanUse(out act);
+//        }
+//        else if (Heat >= 50 && nextGCD == PvE_FullMetalField && (PvE_Drill.IsCoolingDown || !PvE_Drill.EnoughLevel) && (PvE_AirAnchor.IsCoolingDown || !PvE_AirAnchor.EnoughLevel) && PvE_ChainSaw.IsCoolingDown && !Player.HasStatus(true, StatusID.ExcavatorReady))
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+//        else if (Heat >= 50 && nextGCD == PvE_Excavator && (PvE_Drill.IsCoolingDown || !PvE_Drill.EnoughLevel) && (PvE_AirAnchor.IsCoolingDown || !PvE_AirAnchor.EnoughLevel) && PvE_ChainSaw.IsCoolingDown && Player.HasStatus(true, StatusID.ExcavatorReady))
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+//        else if (Heat >= 50 && nextGCD == PvE_ChainSaw && (PvE_Drill.IsCoolingDown || !PvE_Drill.EnoughLevel) && (PvE_AirAnchor.IsCoolingDown || !PvE_AirAnchor.EnoughLevel))
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+//        else if (Heat >= 50 && nextGCD == PvE_AirAnchor && (PvE_ChainSaw.IsCoolingDown || !PvE_ChainSaw.EnoughLevel) && (PvE_Drill.IsCoolingDown || !PvE_Drill.EnoughLevel))
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+//        else if (Heat >= 50 && nextGCD == PvE_Drill && (PvE_ChainSaw.IsCoolingDown || !PvE_ChainSaw.EnoughLevel) && (PvE_AirAnchor.IsCoolingDown || !PvE_AirAnchor.EnoughLevel))
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+//        else if (Heat >= 50 && IsLastGCD(true, PvE_ChainSaw, PvE_AirAnchor, PvE_Drill, PvE_HotShot))
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+//        else if (Heat >= 45 && (nextGCD == PvE_SplitShot || nextGCD == PvE_SlugShot || nextGCD == PvE_CleanShot) && !WillhaveToolSoon)
+//        {
+//            return PvE_Wildfire.CanUse(out act, CanUseOption.OnLastAbility);
+//        }
+
+//        return false;
+//    }
+//    private bool ShouldUseHypercharge(out IAction? act)
+//    {
+//        act = null;
+//        if (IsOverheated)
+//        {
+//            return false;
+//        }
+//        else if (InBurstMCH)
+//        {
+//            return PvE_Hypercharge.CanUse(out act, CanUseOption.MustUse | CanUseOption.EmptyOrSkipCombo);
+//        }
+//        else if (IsLastAbility(ActionID.PvE_Wildfire) && IsLastGCD(ActionID.PvE_ChainSaw, ActionID.PvE_AirAnchor, ActionID.PvE_Drill, ActionID.PvE_SplitShot, ActionID.PvE_SlugShot, ActionID.PvE_CleanShot, ActionID.PvE_HeatedSplitShot, ActionID.PvE_HeatedSlugShot, ActionID.PvE_HotShot))
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+//        else if (WillhaveToolSoon)
+//        {
+//            return false;
+//        }
+//        else if (Player.HasStatus(true, StatusID.Hypercharged))
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+//        else if (CombatElapsedLess(84f) && !CombatElapsedLess(65f) && IsLastGCD(ActionID.PvE_Drill))
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+//        else if (Heat >= 100 && (PvE_Wildfire.RemainingRecastTime <= 15 || PvE_Wildfire.RemainingRecastTime <= 40))
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+//        else if (Heat >= 90 && (PvE_Wildfire.RemainingRecastTime <= 40 && PvE_Wildfire.RemainingRecastTime >= 15) && !WillhaveToolSoon)
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+//        else if (Heat >= 50 && PvE_Wildfire.RemainingRecastTime >= 50)
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+//        else if (!PvE_Wildfire.EnoughLevel)
+//        {
+//            return PvE_Hypercharge.CanUse(out act);
+//        }
+
+//        return false;
+//    }
+//    private static bool ShouldUseGaussroundOrRicochet(out IAction? act)
+//    {
+//        act = null;
+
+//        if (!PvE_GaussRound.HasOneCharge && !PvE_Ricochet.HasOneCharge)
+//        {
+//            return false;
+//        }
+
+//        if (!PvE_GaussRound.HasOneCharge && !PvE_Ricochet.EnoughLevel)
+//        {
+//            return false;
+//        }
+
+//        if (!PvE_Ricochet.EnoughLevel)
+//        {
+//            return PvE_GaussRound.CanUse(out act, CanUseOption.MustUseEmpty);
+//        }
+
+//        if (PvE_GaussRound.CurrentCharges == PvE_Ricochet.CurrentCharges)
+//        {
+//            if (PvE_GaussRound.RemainingRecastTime <= PvE_Ricochet.RemainingRecastTime)
+//            {
+//                return PvE_GaussRound.CanUse(out act, CanUseOption.MustUseEmpty);
+//            }
+//            else if (PvE_GaussRound.RemainingRecastTime >= PvE_Ricochet.RemainingRecastTime)
+//            {
+//                return PvE_Ricochet.CanUse(out act, CanUseOption.MustUseEmpty);
+//            }
+//        }
+
+//        if (PvE_GaussRound.CurrentCharges >= PvE_Ricochet.CurrentCharges)
+//        {
+//            return PvE_GaussRound.CanUse(out act, CanUseOption.MustUseEmpty);
+//        }
+
+//        if (PvE_Ricochet.CurrentCharges >= PvE_GaussRound.CurrentCharges)
+//        {
+//            return PvE_Ricochet.HasOneCharge &&
+//                   PvE_Ricochet.CanUse(out act, CanUseOption.MustUseEmpty);
+//        }
+
+//        return PvE_GaussRound.CanUse(out act, CanUseOption.MustUseEmpty);
+//    }
+//    private bool DumpSkills(IAction nextGCD, out IAction act)
+//    {
+//        if (!Player.HasStatus(true, StatusID.Reassembled) &&
+//            PvE_Reassemble.CanUse(out act, (CanUseOption)2) &&
+//            PvE_Reassemble.CurrentCharges > 0 &&
+//            (nextGCD == PvE_ChainSaw || nextGCD == PvE_AirAnchor || nextGCD == PvE_Drill))
+//        {
+//            return true;
+//        }
+//        if (PvE_BarrelStabilizer.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            return true;
+//        }
+//        if (PvE_AirAnchor.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            return true;
+//        }
+//        if (PvE_ChainSaw.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            return true;
+//        }
+//        if (PvE_Drill.CanUse(out act, CanUseOption.MustUse))
+//        {
+//            return true;
+//        }
+//        if (PvE_RookAutoturret.CanUse(out act, CanUseOption.MustUse) && Battery >= 50)
+//        {
+//            return true;
+//        }
+//        if (PvE_Hypercharge.CanUse(out act) && !WillhaveToolSoon && Heat >= 50)
+//        {
+//            return true;
+//        }
+//        if (HostileTarget.GetHealthRatio() < 0.03 && nextGCD == PvE_CleanShot &&
+//            PvE_Reassemble.CurrentCharges > 0 &&
+//            PvE_Reassemble.CanUse(out act, CanUseOption.IgnoreClippingCheck))
+//        {
+//            return true;
+//        }
+//        if (HostileTarget.GetHealthRatio() < 0.03 &&
+//            PvE_RookAutoturret.ElapsedAfter(5f) && PvE_QueenOverdrive.CanUse(out act))
+//        {
+//            return true;
+//        }
+//        if (HostileTarget.GetHealthRatio() < 0.02 &&
+//            (Player.HasStatus(true, StatusID.Wildfire) || InBurstMCH) &&
+//            PvE_Wildfire.ElapsedAfter(5f) && PvE_Detonator.CanUse(out act))
+//        {
+//            return true;
+//        }
+//        return false;
+//    }
+
+//    protected override void UpdateInfo()
+//    {
+//        HandleOpenerAvailability();
+//        BurstActionCheck();
+//        StateOfOpener();
+//        ToolKitCheck();
+//    }
+
+//    public override void OnTerritoryChanged()
+//    {
+//        ResetOpenerProperties();
+//        base.OnTerritoryChanged();
+//    }
+//}

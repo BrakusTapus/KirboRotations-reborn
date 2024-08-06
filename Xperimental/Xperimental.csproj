@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Xperimental</AssemblyName>
+        <AssemblyVersion>0.0.0.1</AssemblyVersion>
+        <TargetFramework>net8.0-windows</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="Melee\CustomRotationExample.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="CustomRotationExample.archive">
+        </None>
+        
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="Melee\CustomRotationExample.cs" />
+    </ItemGroup>
+
+    <!--<ItemGroup>
+        <Folder Include="UnsafeXper\" />
+        <Folder Include="Healer\" />
+        <Folder Include="Magical\" />
+        <Folder Include="Tank\"  />
+    </ItemGroup>-->                    
+                      
+    <ItemGroup>
+      <PackageReference Update="RotationSolverReborn.Basic" Version="7.0.5.17" />
+    </ItemGroup>
+
+</Project>
