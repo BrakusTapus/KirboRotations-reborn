@@ -1,13 +1,24 @@
 ﻿#pragma warning disable S1066 // Mergeable "if" statements should be combined
 
+using FFXIVClientStructs.FFXIV.Client.Game;
+using KirboRotations.Common;
+using KirboRotations.IllegalHelpers;
+
 namespace KirboRotations.PvERotations.Ranged;
 
-[BetaRotation] // Kirbo\ngeneral combat+\n [Beta]
-[Rotation("K   i   r   b    o\ni                    b\nr    [BETA]    r\nb      i\no   b   r   i    k",
+[BetaRotation]
+[Rotation("┏━━━━━━┓\n" +
+               "┃    ┃\n" +
+               "┃        ┃\n" +
+               "┗━━━━━━┛",
     CombatType.PvE,
     GameVersion = $"v.\notation： v...\n\n",
-    Description = $"┏━━━━━━━━┓\n┃            ┃\n┗∩━━━━━━∩┛\n        \\ (´･ω･｀) ﾉ")]
-[SourceCode(Path = "main/DefaultRotations/Ranged/MCH_Default.cs")]
+    Description = $"┏━━━━━━━━┓\n" +
+                   "┃       v...     ┃\n" +
+                   "┃                 ┃\n" +
+                   "┗∩━━━━━━∩┛\n" +
+                   "        \\ (´･ω･｀) ﾉ")]
+[SourceCode(Path = "")]
 [Api(3)]
 public sealed class MCH_ALT : MachinistRotation
 {
@@ -31,6 +42,8 @@ public sealed class MCH_ALT : MachinistRotation
     private bool OpenerHasFinishedDummy { get; set; } = false;
     private bool OpenerAvailable { get; set; } = false;
     private int Openerstep { get; set; } = 0;
+
+    private bool IsSecond0GCD = false;
     #endregion
 
     #region Countdown logic
