@@ -6,7 +6,7 @@ using Action = Lumina.Excel.GeneratedSheets.Action;
 namespace Xperimental.Ranged;
 
 [BetaRotation]
-[Api(3)]
+[Api(4)]
 [Rotation($"PvP TESTING ONLY", CombatType.PvP, GameVersion = "0x0x0x0", Description = "DO NOT USE LIKE REGULAR")]
 public sealed class MchTestPvP : MachinistRotation
 {

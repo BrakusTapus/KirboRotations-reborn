@@ -1,6 +1,7 @@
 ﻿#pragma warning disable S1066 // Mergeable "if" statements should be combined
 
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
 using KirboRotations.IllegalHelpers;
 
@@ -105,15 +106,21 @@ public sealed class MCH_ALT : MachinistRotation
 
         if ((inRaids || inTrials) && CombatElapsedLessGCD(10))
         {
+            if (!CombatElapsedLessGCD(5) && IsSecond0GCD)
+            {
+                float remainingGCD = DataBased.DefaultGCDRemain;
+                if (WildfirePvE.CanUse(out act, true))
+                {
+                    return true;
+                }
+            }
+
             if (IsLastGCD(ActionID.DrillPvE) && BarrelStabilizerPvE.CanUse(out act))
             {
                 return true;
             }
-            if (IsSecond0GCD && WildfirePvE.CanUse(out act) && nextGCD.IsTheSameTo(ActionID.FullMetalFieldPvE))
-            {
-                return true;
-            }
-            if (Battery >= 50 && IsLastGCD(ActionID.ExcavatorPvE) && AutomatonQueenPvE.CanUse(out act, true, true, true, true))
+
+            if (Battery >= 50 && IsLastGCD(ActionID.ExcavatorPvE, ActionID.ChainSawPvE) && AutomatonQueenPvE.CanUse(out act, false, true, true, true))
             {
                 return true;
             }
@@ -339,7 +346,7 @@ public sealed class MCH_ALT : MachinistRotation
     {
         float remainingGCD = DataBased.DefaultGCDRemain;
 
-        if (remainingGCD >= 0.6f && remainingGCD <= 1f)
+        if (remainingGCD >= 0.6f && remainingGCD <= 1.2f)
         {
             IsSecond0GCD = true;
         }
@@ -588,6 +595,8 @@ public sealed class MCH_ALT : MachinistRotation
 
         ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
         ImGui.Text("DefaultGCDRemain" + DataBased.DefaultGCDRemain.ToString());
+        ImGui.Text("Openerstep: " + Openerstep.ToString());
+
 
 
 

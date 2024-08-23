@@ -2,7 +2,7 @@
 
 [Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.00", Description = "Beta Rotation")]
 [SourceCode(Path = "main/DefaultRotations/PVPRotations/Tank/RPR_Default.PvP.cs")]
-[Api(3)]
+[Api(4)]
 public sealed class RPR_DefaultPvP : ReaperRotation
 {
     [RotationConfig(CombatType.PvP, Name = "Sprint")]

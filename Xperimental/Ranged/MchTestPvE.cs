@@ -11,7 +11,7 @@ namespace Xperimental.Ranged;
 
 [BetaRotation]
 [Api(3)]
-[Rotation($"PvE TESTING ONLY", CombatType.PvE, GameVersion = "0x0x0x0", Description = "DO NOT USE LIKE REGULAR")]
+[Rotation($"PvE TESTING ONLY", CombatType.PvE, GameVersion = "0x0x0x2", Description = "DO NOT USE LIKE REGULAR")]
 public sealed class MchTestPvE : MachinistRotation
 {
     public unsafe override void DisplayStatus()
@@ -29,7 +29,7 @@ public sealed class MchTestPvE : MachinistRotation
 
         if (ImGui.Button(nameof(ActionID.PelotonPvE)))
         {
-            ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action,(uint)ActionID.PelotonPvE);
+            ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action, (uint)ActionID.PelotonPvE);
         }
 
         DisplayStatusHelper.EndPaddedChild();
@@ -56,26 +56,45 @@ public sealed class MchTestPvE : MachinistRotation
     }
     #endregion
 
-    #region oGCD Logic
+    #region oGCD Logic 
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
-        if (ShouldUseGaussroundOrRicochet(out act)) { return true; }
+        if (BarrelStabilizerPvE.CanUse(out act, false, false, false, false, false))
+        {
+            return true;
+        }
+        if (WildfirePvE.CanUse(out act, true, false, false, false, true))
+        {
+            return true;
+        }
+        if (IsLastAbility(ActionID.WildfirePvE))
+        {
+            if (HyperchargePvE.CanUse(out act, false, false, false, false, false))
+            {
+                return true;
+            }
+        }
+        if (GaussRoundPvE.CanUse(out act, false, false, false, false, true))
+        {
+            return true;
+        }
+        if (RicochetPvE.CanUse(out act, true, false, false, false, true))
+        {
+            return true;
+        }
+
+        //if (ShouldUseGaussroundOrRicochet(out act)) { return true; }
 
         return base.EmergencyAbility(nextGCD, out act);
     }
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
-        // Check if Hypercharge should be used based on tool availability
-        if (ToolChargeSoon(out act))
-        {
-            return true; // Hypercharge can be used
-        }
-
-        if (AnalysisPvP.CanUse(out act))
-        {
-            return true;
-        }
+        //// Check if Hypercharge should be used based on tool availability
+        //if (ToolChargeSoon(out act))
+        //{
+        //    return true; // Hypercharge can be used
+        //}
 
         return base.AttackAbility(nextGCD, out act);
     }
@@ -85,6 +104,9 @@ public sealed class MchTestPvE : MachinistRotation
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
+        if (HeatBlastPvE.CanUse(out act))
+            return true;
+
         if (PowerfulPewPews(out act))
             return true;
 

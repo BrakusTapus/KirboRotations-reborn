@@ -33,6 +33,10 @@
                       
     <ItemGroup>
       <Folder Include="Tank\" />
+    </ItemGroup>                    
+                      
+    <ItemGroup>
+      <PackageReference Include="RotationSolverReborn.Basic" Version="7.0.5.30" />
     </ItemGroup>
 
 </Project>

@@ -68,9 +68,9 @@ internal static class DisplayStatusHelper
         // Add some padding between the progress bars
         ImGui.Dummy(new Vector2(0, padding));
 
-        ImGui.Text("GCD Elapsed: " + DataBased.DefaultGCDElapsed.ToString("F2"));
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padding);
-        ImGui.ProgressBar(DataBased.DefaultGCDElapsed / DataBased.DefaultGCDTotal, progressBarSize, "");
+        //ImGui.Text("GCD Elapsed: " + DataBased.DefaultGCDElapsed.ToString("F2"));
+        //ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padding);
+        //ImGui.ProgressBar(DataBased.DefaultGCDElapsed / DataBased.DefaultGCDTotal, progressBarSize, "");
 
         // End the bordered group
         EndBorderedGroup();
