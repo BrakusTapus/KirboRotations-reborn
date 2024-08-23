@@ -3,7 +3,7 @@ using Action = Lumina.Excel.GeneratedSheets.Action;
 
 using FFXIVClientStructs.FFXIV.Client.Game;
 
-namespace Xperimental.Common;
+namespace KirboRotations.Common;
 
 internal unsafe class ActionCoolDown
 {

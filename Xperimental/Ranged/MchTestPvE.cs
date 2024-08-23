@@ -14,24 +14,25 @@ namespace Xperimental.Ranged;
 [Rotation($"PvE TESTING ONLY", CombatType.PvE, GameVersion = "0x0x0x0", Description = "DO NOT USE LIKE REGULAR")]
 public sealed class MchTestPvE : MachinistRotation
 {
-    public override void DisplayStatus()
+    public unsafe override void DisplayStatus()
     {
-        ImGui.BeginChild("The CustomRotation's status window", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y), border: true, ImGuiWindowFlags.AlwaysAutoResize);
-        ImGui.Text("Rotation: " + Name + " "); ImGui.SameLine(); ImGui.TextDisabled(Description);
+        float paddingX = ImGui.GetStyle().WindowPadding.X;
+        DisplayStatusHelper.BeginPaddedChild("The CustomRotation's status window", true, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
-        //TODO- Add GroupBox with a border that lists all available actions.
-        //TODO- Add GroupBox with a border that lists general help information for debugging.
+        ImGui.Text("Rotation: " + Name + " ");
+        ImGui.SameLine();
+        ImGui.TextDisabled(Description);
 
-        float defaultGCDtime = HeatedCleanShotPvE.Info.AnimationLockTime;
-        ImGui.Text($"AnimationLockTime: {ActionCoolDown.AnimationLockTime.ToString("F2",CultureInfo.CurrentCulture)}");
-        ImGui.Text($"HeatedCleanShotPvE.Info.AnimationLockTime: {defaultGCDtime}:X2");
+        DisplayStatusHelper.DisplayGCDStatus();
 
-        if (ImGui.Button("lolloololol"))
+        //var gameobjectID = DataBase.DisplayPlayerGameObjectId();
+
+        if (ImGui.Button(nameof(ActionID.PelotonPvE)))
         {
-            Use(ActionID.PelotonPvE);
+            ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action,(uint)ActionID.PelotonPvE);
         }
 
-        ImGui.EndChild();
+        DisplayStatusHelper.EndPaddedChild();
     }
 
     #region Config Options
@@ -308,6 +309,7 @@ public sealed class MchTestPvE : MachinistRotation
 
         if (Action.TargetArea)
         {
+            Serilog.Log.Logger.Debug($"Using action: {actionID.ToString()}");
             return ActionManager.Instance()->UseActionLocation(ActionType.Action, (uint)actionID, Player.TargetObjectId, (Vector3*)&loc);
         }
         else if (Target == null)
@@ -316,6 +318,7 @@ public sealed class MchTestPvE : MachinistRotation
         }
         else
         {
+            Serilog.Log.Logger.Debug("Using action: " + actionID.ToString());
             return ActionManager.Instance()->UseAction(ActionType.Action, (uint)actionID, Player.TargetObjectId);
         }
     }

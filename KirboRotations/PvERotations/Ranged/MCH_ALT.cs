@@ -14,7 +14,7 @@ namespace KirboRotations.PvERotations.Ranged;
     CombatType.PvE,
     GameVersion = $"v.\notation： v...\n\n",
     Description = $"┏━━━━━━━━┓\n" +
-                   "┃       v...     ┃\n" +
+                   "┃       v...     ┃\n" +
                    "┃                 ┃\n" +
                    "┗∩━━━━━━∩┛\n" +
                    "        \\ (´･ω･｀) ﾉ")]
@@ -28,6 +28,9 @@ public sealed class MCH_ALT : MachinistRotation
 
     [RotationConfig(CombatType.PvE, Name = "Use LvL 100 Opener")]
     public bool UseLv100Opener { get; set; } = false;
+
+    [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture [Please let me know if this works]")]
+    public bool UseAuto2ndTincture { get; set; } = false;
 
     private byte HeatStacks
     {
@@ -52,11 +55,17 @@ public sealed class MCH_ALT : MachinistRotation
     {
         if (remainTime < 4.85f)
         {
-            if (ReassemblePvE.CanUse(out var act) && !Player.HasStatus(true, StatusID.Reassembled)) return act;
+            if (ReassemblePvE.CanUse(out var act) && !Player.HasStatus(true, StatusID.Reassembled))
+            {
+                return act;
+            }
         }
         if (remainTime < 1.5f)
         {
-            if (UseBurstMedicine(out var act)) return act;
+            if (UseBurstMedicine(out var act))
+            {
+                return act;
+            }
         }
         return base.CountDownAction(remainTime);
     }
@@ -69,6 +78,11 @@ public sealed class MCH_ALT : MachinistRotation
         if (StartOpener)
         {
             return Opener(out act);
+        }
+
+        if (UseAuto2ndTincture && ShouldUseBurstMedicine(out act))
+        {
+            return true;
         }
 
         // Reassemble Logic
@@ -95,7 +109,7 @@ public sealed class MCH_ALT : MachinistRotation
             {
                 return true;
             }
-            if (WildfirePvE.CanUse(out act) && nextGCD.IsTheSameTo(ActionID.FullMetalFieldPvE))
+            if (IsSecond0GCD && WildfirePvE.CanUse(out act) && nextGCD.IsTheSameTo(ActionID.FullMetalFieldPvE))
             {
                 return true;
             }
@@ -141,26 +155,45 @@ public sealed class MCH_ALT : MachinistRotation
         // Burst
         if (IsBurst)
         {
-            if (UseBurstMedicine(out act)) return true;
-
+            if (UseBurstMedicine(out act))
             {
-                if ((IsLastAbility(false, HyperchargePvE) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)) && !CombatElapsedLess(10) && CanUseHyperchargePvE(out _)
-                && !LowLevelHyperCheck && WildfirePvE.CanUse(out act)) return true;
+                return true;
             }
+
+
+            if ((IsLastAbility(false, HyperchargePvE) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged))
+                && !CombatElapsedLess(10) && CanUseHyperchargePvE(out _) && !LowLevelHyperCheck && WildfirePvE.CanUse(out act))
+            {
+                return true;
+            }
+
         }
         // Use Hypercharge if at least 12 seconds of combat and (if wildfire will not be up in 30 seconds or if you hit 100 heat)
         if (!LowLevelHyperCheck && !CombatElapsedLess(12) && !Player.HasStatus(true, StatusID.Reassembled) && (!WildfirePvE.Cooldown.WillHaveOneCharge(30) || Heat == 100))
         {
-            if (CanUseHyperchargePvE(out act)) return true;
+            if (CanUseHyperchargePvE(out act))
+            {
+                return true;
+            }
         }
         // Rook Autoturret/Queen Logic
-        if (!IsLastGCD(true, HeatBlastPvE, BlazingShotPvE) && CanUseQueenMeow(out act)) return true;
+        if (!IsLastGCD(true, HeatBlastPvE, BlazingShotPvE) && CanUseQueenMeow(out act))
+        {
+            return true;
+        }
+
         if (nextGCD.IsTheSameTo(true, CleanShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery == 100)
         {
-            if (RookAutoturretPvE.CanUse(out act)) return true;
+            if (RookAutoturretPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
         // Use Barrel Stabilizer on CD if won't cap
-        if (BarrelStabilizerPvE.CanUse(out act)) return true;
+        if (BarrelStabilizerPvE.CanUse(out act))
+        {
+            return true;
+        }
 
         return base.AttackAbility(nextGCD, out act);
     }
@@ -171,32 +204,59 @@ public sealed class MCH_ALT : MachinistRotation
     protected override bool GeneralGCD(out IAction? act)
     {
         bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
+        bool hasTinctureBuff = Player.HasStatus(true, StatusID.Medicated);
 
         // Checks and executes AutoCrossbow or HeatBlast if conditions are met (overheated state).
-        if (AutoCrossbowPvE.CanUse(out act)) return true;
-        if (HeatBlastPvE.CanUse(out act)) return true;
+        if (AutoCrossbowPvE.CanUse(out act))
+        {
+            return true;
+        }
 
-
+        if (HeatBlastPvE.CanUse(out act, skipComboCheck: true))
+        {
+            return true;
+        }
 
         // Executes Bioblaster, and then checks for AirAnchor or HotShot, and Drill based on availability and conditions.
-        if (BioblasterPvE.CanUse(out act)) return true;
+        if (BioblasterPvE.CanUse(out act))
+        {
+            return true;
+        }
         // Check if SpreadShot cannot be used
         if (!SpreadShotPvE.CanUse(out _))
         {
             // Check if AirAnchor can be used
-            if (AirAnchorPvE.CanUse(out act)) return true;
+            if (AirAnchorPvE.CanUse(out act))
+            {
+                return true;
+            }
 
             // If not at the required level for AirAnchor and HotShot can be used
-            if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act)) return true;
+            if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act))
+            {
+                return true;
+            }
 
             // Check if Drill can be used
-            if (DrillPvE.CanUse(out act)) return true;
+            if (DrillPvE.CanUse(out act))
+            {
+                return true;
+            }
 
-            if (ExcavatorPvE.CanUse(out act, usedUp: true)) return true;
+            if (ExcavatorPvE.CanUse(out act, usedUp: true))
+            {
+                return true;
+            }
 
-            if (ChainSawPvE.CanUse(out act, usedUp: true)) return true;
+            if (ChainSawPvE.CanUse(out act, usedUp: true))
+            {
+                return true;
+            }
 
-            if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true)) return true;
+            if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true))
+            {
+                return true;
+            }
 
             //if (FullMetalFieldPvE.CanUse(out act, usedUp: true)) return true;
             if (Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
@@ -206,26 +266,62 @@ public sealed class MCH_ALT : MachinistRotation
         }
 
         // Special condition for using ChainSaw outside of AoE checks if no action is chosen within 4 GCDs.
-        if (!CombatElapsedLessGCD(1) && ChainSawPvE.CanUse(out act, skipAoeCheck: true)) return true;
-        if (ExcavatorPvE.CanUse(out act, skipAoeCheck: true)) return true;
+        if (!CombatElapsedLessGCD(1) && ChainSawPvE.CanUse(out act, skipAoeCheck: true))
+        {
+            return true;
+        }
+
+        if (ExcavatorPvE.CanUse(out act, skipAoeCheck: true))
+        {
+            return true;
+        }
+
         if (!ChainSawPvE.Cooldown.WillHaveOneCharge(6f) && !CombatElapsedLessGCD(6))
         {
-            if (DrillPvE.CanUse(out act, usedUp: true)) return true;
+            if (DrillPvE.CanUse(out act, usedUp: true))
+            {
+                return true;
+            }
         }
 
         // AoE actions: ChainSaw and SpreadShot based on their usability.
         if (SpreadShotPvE.CanUse(out _))
         {
-            if (ChainSawPvE.CanUse(out act)) return true;
-            if (ExcavatorPvE.CanUse(out act)) return true;
+            if (ChainSawPvE.CanUse(out act))
+            {
+                return true;
+            }
+
+            if (ExcavatorPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
-        if (FullMetalFieldPvE.CanUse(out act)) return true;
-        if (SpreadShotPvE.CanUse(out act)) return true;
+        if (FullMetalFieldPvE.CanUse(out act))
+        {
+            return true;
+        }
+
+        if (SpreadShotPvE.CanUse(out act))
+        {
+            return true;
+        }
 
         // Single target actions: CleanShot, SlugShot, and SplitShot based on their usability.
-        if (CleanShotPvE.CanUse(out act)) return true;
-        if (SlugShotPvE.CanUse(out act)) return true;
-        if (SplitShotPvE.CanUse(out act)) return true;
+        if (CleanShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+
+        if (SlugShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+
+        if (SplitShotPvE.CanUse(out act))
+        {
+            return true;
+        }
 
         return base.GeneralGCD(out act);
     }
@@ -234,7 +330,23 @@ public sealed class MCH_ALT : MachinistRotation
     #region Extra Methods
     protected override void UpdateInfo()
     {
+        IsInSecond0GCD();
         OpenerReady();
+
+    }
+
+    private void IsInSecond0GCD()
+    {
+        float remainingGCD = DataBased.DefaultGCDRemain;
+
+        if (remainingGCD >= 0.6f && remainingGCD <= 1f)
+        {
+            IsSecond0GCD = true;
+        }
+        else
+        {
+            IsSecond0GCD = false;
+        }
     }
 
     // Logic for Hypercharge
@@ -289,7 +401,10 @@ public sealed class MCH_ALT : MachinistRotation
 
         if (NoQueenLogic || QueenOne || QueenTwo || QueenThree || QueenFour || QueenFive || QueenSix || QueenSeven || QueenEight || QueenNine || QueenTen || QueenEleven || QueenTwelve || QueenThirteen || QueenFourteen || QueenFifteen)
         {
-            if (RookAutoturretPvE.CanUse(out act)) return true;
+            if (RookAutoturretPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
         act = null;
         return false;
@@ -423,5 +538,59 @@ public sealed class MCH_ALT : MachinistRotation
         act = null;
         return OpenerHasFinishedDummy = false;
     }
+
+    private bool ShouldUseBurstMedicine(out IAction? act)
+    {
+        act = null;  // Default to null if Tincture cannot be used.
+
+        // Don't use Tincture if player has a bad status
+        if (Player.HasStatus(false, StatusID.Weakness) || Player.HasStatus(true, StatusID.Transcendent) || Player.HasStatus(true, StatusID.BrinkOfDeath))
+        {
+            return false;
+        }
+
+        if (WildfirePvE.Cooldown.RecastTimeRemainOneCharge <= 20 && CombatTime > 60 &&
+            NextAbilityToNextGCD > 1.2 &&
+            !Player.HasStatus(true, StatusID.Weakness) &&
+            DrillPvE.Cooldown.RecastTimeRemainOneCharge < 5 &&
+            AirAnchorPvE.Cooldown.RecastTimeRemainOneCharge < 5)
+        {
+            // Attempt to use Burst Medicine.
+            return UseBurstMedicine(out act, false);
+        }
+        // If the conditions are not met, return false.
+        return false;
+    }
     #endregion
+
+    public unsafe override void DisplayStatus()
+    {
+        float paddingX = ImGui.GetStyle().WindowPadding.X;
+        DisplayStatusHelper.BeginPaddedChild("The CustomRotation's status window", true, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
+
+        ImGui.Text("Rotation: " + Name + " ");
+        ImGui.SameLine();
+        ImGui.TextDisabled(Description);
+
+        DisplayStatusHelper.DisplayGCDStatus();
+
+        //var gameobjectID = DataBase.DisplayPlayerGameObjectId();
+
+        if (ImGui.Button(nameof(ActionID.PelotonPvE)))
+        {
+            ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action, (uint)ActionID.PelotonPvE);
+        }
+
+        ImGui.Spacing();
+        ImGui.Spacing();
+        ImGui.Spacing();
+        ImGui.Spacing();
+
+        ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
+        ImGui.Text("DefaultGCDRemain" + DataBased.DefaultGCDRemain.ToString());
+
+
+
+        DisplayStatusHelper.EndPaddedChild();
+    }
 }

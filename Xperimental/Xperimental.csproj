@@ -29,6 +29,10 @@
                       
     <ItemGroup>
       <PackageReference Update="RotationSolverReborn.Basic" Version="7.0.5.17" />
+    </ItemGroup>                    
+                      
+    <ItemGroup>
+      <Folder Include="Tank\" />
     </ItemGroup>
 
 </Project>

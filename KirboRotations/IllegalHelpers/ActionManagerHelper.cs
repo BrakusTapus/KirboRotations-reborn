@@ -1,11 +1,8 @@
 ﻿using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
-namespace Xperimental.Common;
+namespace KirboRotations.Common;
 internal class ActionManagerHelper
 {
-
     /// <summary>
     /// Retrieves the current animation lock duration from the ActionManager.
     /// </summary>
@@ -48,7 +45,7 @@ internal class ActionManagerHelper
     /// <returns>The default recast time in seconds.</returns>
     public static float GetDefaultRecastTime()
     {
-        return GetRecastTime(ActionType.Action, 11u);
+        return GetRecastTime(ActionType.Action, 11u); // Surely we can get a dynamic value for this somewhere
     }
 
     /// <summary>
@@ -78,7 +75,6 @@ internal class ActionManagerHelper
     {
         return GetRecastTimeElapsed(ActionType.Action, 11u);
     }
-    //========================================================================================================
 
     internal static ActionManagerHelper Instance { get; } = new ActionManagerHelper();
     internal unsafe ActionManager* InstanceActionManager { get; } = GetActionManagerInstance();
@@ -87,82 +83,6 @@ internal class ActionManagerHelper
     {
         return ActionManager.Instance();
     }
-
-
-    //private static float GCD_DURATION = GetDefaultRecastTime();
-    //private static float ANIMATION_LOCK_DURATION = GetCurrentAnimationLock();
-    //private const float BUFFER_TIME = 0.25f;
-
-    ///// <summary>
-    ///// Determines if there is enough time left in the current GCD window to use an ability.
-    ///// </summary>
-    ///// <returns>True if an ability can be used in the first slot, false otherwise.</returns>
-    //public static bool CanUseFirstAbility()
-    //{
-    //    float timeRemaining = DataBase.DefaultGCDRemain;
-    //    return timeRemaining >= (BUFFER_TIME + ANIMATION_LOCK_DURATION);
-    //}
-
-    ///// <summary>
-    ///// Determines if there is enough time left in the current GCD window to use a second ability.
-    ///// </summary>
-    ///// <returns>True if an ability can be used in the second slot, false otherwise.</returns>
-    //public static bool CanUseSecondAbility()
-    //{
-    //    float timeRemaining = DataBase.DefaultGCDRemain;
-    //    return timeRemaining >= (BUFFER_TIME + 2 * ANIMATION_LOCK_DURATION + BUFFER_TIME);
-    //}
-
-    //public unsafe static float UseAction(ActionType type, uint id)
-    //{
-    //    ActionManager* ptr = ActionManager.Instance();
-    //    if (ptr == null)
-    //    {
-    //        return 0f;
-    //    }
-
-    //    return ptr->UseAction(type, id);
-    //}
-
-    //public static float GetLastActionDefaultRecastTime()
-    //{
-    //    //id = lasta;
-    //    return GetRecastTime(ActionType.Action, 11u); // Surely we can get a dynamic value for this somewhere
-    //}
-
-
-
-
-    //static Lumina.Excel.GeneratedSheets.Action? Action = new();
-    //static TargetType? TargetType = null;
-
-    //public static unsafe bool UseAction(ActionID actionID)
-    //{
-    //    return ActionManager.Instance()->UseAction(ActionType.Action, (uint)actionID);
-    //}
-
-    //public static unsafe bool Use(ActionID actionID)
-    //{
-    //    ActionManager* actionManager = ActionManager.Instance();
-    //    uint adjustedID = actionManager->GetAdjustedActionId((uint)actionID);
-
-    //    var loc = new FFXIVClientStructs.FFXIV.Common.Math.Vector3() { X = Target.Position.X, Y = Target.Position.Y, Z = Target.Position.Z };
-
-    //    if (Action.TargetArea)
-    //    {
-    //        Serilog.Log.Logger.Debug($"Using action: {actionID.ToString()}");
-    //        return ActionManager.Instance()->UseActionLocation(ActionType.Action, (uint)actionID, Player.TargetObjectId, (Vector3*)&loc);
-    //    }
-    //    else if (Target == null)
-    //    {
-    //        return false;
-    //    }
-    //    else
-    //    {
-    //        Serilog.Log.Logger.Debug("Using action: " + actionID.ToString());
-    //        return ActionManager.Instance()->UseAction(ActionType.Action, (uint)actionID, Player.TargetObjectId);
-    //    }
-    //}
 
     /*
 

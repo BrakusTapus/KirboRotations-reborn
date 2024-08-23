@@ -262,9 +262,8 @@ internal class MCH_TESTERPvE : MachinistRotation
 
         ImGui.TextWrapped("BlastChargePvP Target: " + BlastChargePvP.Target.Target?.ToString());
         ImGui.TextWrapped("BishopAutoturretPvP Target: " + BishopAutoturretPvP.Target.Target?.ToString());
-
-        //ImGui.TextWrapped("BarUnits: " + CurrentBarUnits);
-        //ImGui.TextWrapped("IsPvP: " + IsCurrentPvP);
+        ImGui.TextWrapped("BioblasterPvP Target: " + BioblasterPvP.Target.Target?.ToString());
+        ImGui.TextWrapped("Distance" + Target.DistanceToPlayer().ToString() + "y");
     }
     #endregion
 
@@ -328,12 +327,11 @@ internal class MCH_TESTERPvE : MachinistRotation
         }
 
         // Marks Man should already be taking into invulns into account
-        if (!IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1)
+        bool toolow = Target.CurrentHp < 5000 ;
+        bool toomuch = Target.CurrentHp >= 25000;
+        bool oktouse = !toolow && !toomuch;
+        if (oktouse && !IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1)
         {
-            if (Target.CurrentHp < 5000 && Target.CurrentHp >= 25000)
-            {
-                return false;
-            }
             return true;
         }
 
@@ -356,7 +354,7 @@ internal class MCH_TESTERPvE : MachinistRotation
         }
 
         // Uses BioBlaster automatically when a Target is in range
-        if (Target != Player && Target.DistanceToPlayer() < 11 && !IsPvPOverheated && BioblasterPvP.CanUse(out act, usedUp: false, skipAoeCheck: true))
+        if ((Target != Player && Target.DistanceToPlayer() < 7) && !IsPvPOverheated && BioblasterPvP.CanUse(out act, false, false, true, true))
         {
             return true;
         }
@@ -369,7 +367,7 @@ internal class MCH_TESTERPvE : MachinistRotation
 
         // Chain Saw is used if Player is not overheated and available
         // Note: Analysis will be used to buff Chain Saw if Target has around half of their HP
-        if (!IsPvPOverheated && ChainSawPvP.CanUse(out act, usedUp: true/*, skipComboCheck: true*/))
+        if (!IsPvPOverheated && ChainSawPvP.CanUse(out act, usedUp: true))
         {
             return true;
         }
@@ -503,6 +501,10 @@ internal class MCH_TESTERPvE : MachinistRotation
         // Analysis should be used on any of the tools depending on which options are enabled
         if (AnalysisPvP.CanUse(out act, usedUp: true) && NumberOfAllHostilesInRange > 0 && !IsPvPOverheated)
         {
+            if (Player.HasStatus(true, StatusID.Analysis))
+            {
+                return false;
+            }
             if (AnalysisPvP.Cooldown.CurrentCharges > 0 && Player.HasStatus(true, StatusID.DrillPrimed) && PvP_HeatStacks <= 4 && !WildfirePvP.Cooldown.WillHaveOneCharge(10))
             {
                 return true;

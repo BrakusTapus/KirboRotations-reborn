@@ -7,28 +7,11 @@ namespace Xperimental.Ranged;
 
 [BetaRotation]
 [Api(3)]
-[Rotation($"PvP TESTING ONLY", CombatType.PvE, GameVersion = "0x0x0x0", Description = "DO NOT USE LIKE REGULAR")]
+[Rotation($"PvP TESTING ONLY", CombatType.PvP, GameVersion = "0x0x0x0", Description = "DO NOT USE LIKE REGULAR")]
 public sealed class MchTestPvP : MachinistRotation
 {
     public unsafe override void DisplayStatus()
     {
-        ImGui.BeginChild("The CustomRotation's status window", new Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetContentRegionAvail().Y), border: true, ImGuiWindowFlags.AlwaysAutoResize);
-        ImGui.Text("Rotation: " + Name + " "); ImGui.SameLine(); ImGui.TextDisabled(Description);
-
-        //TODO- Add GroupBox with a border that lists all available actions.
-        //TODO- Add GroupBox with a border that lists general help information for debugging.
-
-        var ActionManager = ActionManagerInstance.InstanceActionManager ;
-        float defaultGCDtime = HeatedCleanShotPvE.AnimationLockTime;
-        ImGui.Text($"AnimationLockTime: {ActionManagerInstance.InstanceActionManager->AnimationLock}");
-        ImGui.Text($"HeatedCleanShotPvE.Info.AnimationLockTime: {defaultGCDtime}");
-
-        if (ImGui.Button(ActionID.PelotonPvE.ToString()))
-        {
-            Use(ActionID.PelotonPvE);
-        }
-
-        ImGui.EndChild();
     }
 
     #region Config Options
@@ -92,7 +75,6 @@ public sealed class MchTestPvP : MachinistRotation
     #endregion
 
     #region Extra Methods
-    //[PluginService] public static IPluginLog PluginLog { get; private set; }
     public int Openerstep { get; private set; }
     public bool OpenerAvailable { get; private set; }
     public bool WillhaveToolSoon { get; private set; }
