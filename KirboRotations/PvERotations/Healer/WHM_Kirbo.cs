@@ -1,6 +1,6 @@
 namespace DefaultRotations.Healer;
 
-[Rotation("Kirbo's shitty healer", CombatType.PvE, GameVersion = "7.00")]
+[Rotation("Kirbo's WHM", CombatType.PvE, GameVersion = "7.00")]
 [SourceCode(Path = "main/DefaultRotations/Healer/WHM_Default.cs")]
 [Api(3)]
 public sealed class WHM_Kirbo : WhiteMageRotation

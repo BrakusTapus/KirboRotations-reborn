@@ -354,7 +354,7 @@ internal class MCH_TESTERPvE : MachinistRotation
         }
 
         // Uses BioBlaster automatically when a Target is in range
-        if ((Target != Player && Target.DistanceToPlayer() < 7) && !IsPvPOverheated && BioblasterPvP.CanUse(out act, false, false, true, true))
+        if (!IsPvPOverheated && BioblasterPvP.CanUse(out act))
         {
             return true;
         }

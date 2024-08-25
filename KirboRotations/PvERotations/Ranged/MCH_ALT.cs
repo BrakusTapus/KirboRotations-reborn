@@ -108,7 +108,6 @@ public sealed class MCH_ALT : MachinistRotation
         {
             if (!CombatElapsedLessGCD(5) && IsSecond0GCD)
             {
-                float remainingGCD = DataBased.DefaultGCDRemain;
                 if (WildfirePvE.CanUse(out act, true))
                 {
                     return true;

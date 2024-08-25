@@ -13,9 +13,11 @@ public sealed class SGE_Kirbo : SageRotation
     public bool PneumaInCountdown { get; set; } = false;
 
     [Range(0.1f, 5f, ConfigUnitType.Seconds)]
-    [RotationConfig(CombatType.PvE, Name = "At what countdown second to use")]
+    [RotationConfig(CombatType.PvE, Name = "At what countdown second to use Pneuma.")]
     public float PneumaInCountdownTimer { get; set; } = 0.6f;
-    #endregion
+
+    [RotationConfig(CombatType.PvE, Name = "Use Taurochole only on Tanks.")]
+    public bool TaurocholeHealOnTanks { get; set; } = false;
 
     [Range(0, 1, ConfigUnitType.Percent)]
     [RotationConfig(CombatType.PvE, Name = "Health threshold party member needs to be to use Taurochole")]
@@ -64,6 +66,8 @@ public sealed class SGE_Kirbo : SageRotation
     [Range(0, 1, ConfigUnitType.Percent)]
     [RotationConfig(CombatType.PvE, Name = "Health threshold tank party member needs to use Pneuma as an AOE heal")]
     public float PneumaAOETankHeal { get; set; } = 0.6f;
+    #endregion
+
 
     #region Countdown Logic
     protected override IAction? CountDownAction(float remainTime)
@@ -168,7 +172,12 @@ public sealed class SGE_Kirbo : SageRotation
     [RotationDesc(ActionID.TaurocholePvE, ActionID.KeracholePvE, ActionID.DruocholePvE, ActionID.HolosPvE, ActionID.PhysisPvE, ActionID.PanhaimaPvE)]
     protected override bool HealSingleAbility(IAction nextGCD, out IAction? act)
     {
-        if (TaurocholePvE.CanUse(out act)) return true;
+        //if (TaurocholePvE.CanUse(out act)) return true;
+
+        var tankTaurochole = PartyMembers.GetJobCategory(JobRole.Tank);
+        if (TaurocholeHealOnTanks && TaurocholePvE.CanUse(out act) && tankTaurochole.Any(t => t.GetHealthRatio() < OGCDTankHeal)) return true;
+
+        if (!TaurocholeHealOnTanks && TaurocholePvE.CanUse(out act)) return true;
 
         if (KeracholePvE.CanUse(out act) && EnhancedKeracholeTrait.EnoughLevel) return true;
 
