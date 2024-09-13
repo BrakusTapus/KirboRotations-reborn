@@ -27,11 +27,14 @@ public sealed class MCH_ALT : MachinistRotation
     [RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
     public bool SkipQueenLogic { get; set; } = true;
 
-    [RotationConfig(CombatType.PvE, Name = "Use LvL 100 Opener")]
-    public bool UseLv100Opener { get; set; } = false;
+    //[RotationConfig(CombatType.PvE, Name = "Use LvL 100 Opener")]
+    //public bool UseLv100Opener { get; set; } = false;
 
-    [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture [Please let me know if this works]")]
+    [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
     public bool UseAuto2ndTincture { get; set; } = false;
+
+    [RotationConfig(CombatType.PvE, Name = "Enable experimental features.")]
+    public bool ExperimentalFeature { get; set; } = false;
 
     private byte HeatStacks
     {
@@ -41,6 +44,8 @@ public sealed class MCH_ALT : MachinistRotation
             return stacks == byte.MaxValue ? (byte)5 : stacks;
         }
     }
+
+    private bool InBurst { get; set; } = false;
     private bool StartOpener { get; set; } = false;
     private bool OpenerHasFinished { get; set; } = false;
     private bool OpenerHasFinishedDummy { get; set; } = false;
@@ -104,7 +109,7 @@ public sealed class MCH_ALT : MachinistRotation
         bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
         bool inTrials = TerritoryContentType.Equals(TerritoryContentType.Trials);
 
-        if ((inRaids || inTrials) && CombatElapsedLessGCD(10))
+        if (/*(inRaids || inTrials) &&*/ CombatElapsedLessGCD(10))
         {
             if (!CombatElapsedLessGCD(5) && IsSecond0GCD)
             {
@@ -223,11 +228,15 @@ public sealed class MCH_ALT : MachinistRotation
             return true;
         }
 
+        bool experimentalFeatureNoGCDsBeyondThisPoint = ExperimentalFeature && IsOverheated;
+        if (experimentalFeatureNoGCDsBeyondThisPoint) return false;
+
         // Executes Bioblaster, and then checks for AirAnchor or HotShot, and Drill based on availability and conditions.
         if (BioblasterPvE.CanUse(out act))
         {
             return true;
         }
+
         // Check if SpreadShot cannot be used
         if (!SpreadShotPvE.CanUse(out _))
         {
@@ -264,7 +273,6 @@ public sealed class MCH_ALT : MachinistRotation
                 return true;
             }
 
-            //if (FullMetalFieldPvE.CanUse(out act, usedUp: true)) return true;
             if (Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
             {
                 return true;
@@ -338,9 +346,16 @@ public sealed class MCH_ALT : MachinistRotation
     {
         IsInSecond0GCD();
         OpenerReady();
-
+        BurstChecker();
     }
 
+    private void BurstChecker()
+    {
+        bool hasWildfire = Player.HasStatus(true, StatusID.Wildfire_1946);
+        InBurst = hasWildfire;
+    }
+
+    // 1946
     private void IsInSecond0GCD()
     {
         float remainingGCD = DataBased.DefaultGCDRemain;
@@ -358,6 +373,11 @@ public sealed class MCH_ALT : MachinistRotation
     // Logic for Hypercharge
     private bool CanUseHyperchargePvE(out IAction? act)
     {
+        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true,StatusID.Hypercharged)))
+        {
+            return HyperchargePvE.CanUse(out act);
+        }
+
         float REST_TIME = 6f;
         if
                      //Cannot AOE
@@ -564,6 +584,19 @@ public sealed class MCH_ALT : MachinistRotation
             // Attempt to use Burst Medicine.
             return UseBurstMedicine(out act, false);
         }
+
+        //if (WildfirePvE.Cooldown.RecastTimeRemainOneCharge <= 10
+        //    && !Target.HasStatus(true, StatusID.Wildfire)
+        //    && Target != Player
+        //    && CombatTime > 300
+        //    && !Player.HasStatus(true, StatusID.Weakness)
+        //    && AirAnchorPvE.Cooldown.IsCoolingDown
+        //    && IsLastAbility(ActionID.BarrelStabilizerPvE)
+        //    && DrillPvE.Cooldown.RecastTimeRemainOneCharge < 2.5f)
+        //{
+        //    return UseBurstMedicine(out act, false);
+        //}
+
         // If the conditions are not met, return false.
         return false;
     }
@@ -589,6 +622,9 @@ public sealed class MCH_ALT : MachinistRotation
 
         ImGui.Spacing();
         ImGui.Spacing();
+
+        ImGui.Text("InBurst: " + InBurst.ToString());
+
         ImGui.Spacing();
         ImGui.Spacing();
 

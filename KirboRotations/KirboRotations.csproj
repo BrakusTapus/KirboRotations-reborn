@@ -19,7 +19,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="PvERotations\Tank\" />
 
         <Folder Include="PvPRotations\Healer" />
         <Folder Include="PvPRotations\Ranged" />
@@ -29,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="RotationSolverReborn.Basic" Version="7.0.5.30" />
+        <PackageReference Include="RotationSolverReborn.Basic" Version="7.0.5.69" />
         <PackageReference Include="System.Drawing.Common" Version="8.0.8" />
     </ItemGroup>
 </Project>

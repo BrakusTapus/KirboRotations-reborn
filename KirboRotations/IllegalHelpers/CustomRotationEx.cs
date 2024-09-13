@@ -228,24 +228,6 @@ internal unsafe class CustomRotationEx
         GetDefaultRecastTime() * gcdCount + offset;
     #endregion
 
-    #region 0GCD
-    /*
-
-            if (!IsRealGCD)
-            {
-                if (option.HasFlag(CanUseOption.OnLastAbility))
-                {
-                    if (DataCenter.NextAbilityToNextGCD > AnimationLockTime + DataCenter.Ping + DataCenter.MinAnimationLock) return false;
-                }
-                else if (!option.HasFlag(CanUseOption.IgnoreClippingCheck))
-                {
-                    if (DataCenter.NextAbilityToNextGCD < AnimationLockTime) return false;
-                }
-            }
-
-    */
-    #endregion
-
     #region Limit break
     [System.ComponentModel.Description("Bar Count")]
     internal unsafe static byte CurrentBarCount

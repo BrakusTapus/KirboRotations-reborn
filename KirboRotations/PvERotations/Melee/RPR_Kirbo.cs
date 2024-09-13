@@ -1,9 +1,9 @@
 ﻿namespace DefaultRotations.Melee;
 
-[Rotation("Default", CombatType.PvE, GameVersion = "7.01", Description = "")]
+[Rotation("Kirbo's RPR", CombatType.PvE, GameVersion = "7.01", Description = "")]
 [SourceCode(Path = "main/DefaultRotations/Melee/RPR_Default.cs")]
 [Api(3)]
-public sealed class RPR_Default : ReaperRotation
+public sealed class RPR_Kirbo : ReaperRotation
 {
     #region Config Options
     [RotationConfig(CombatType.PvE, Name = "[Beta Option] Pool Shroud for Arcane Circle.")]
@@ -32,6 +32,8 @@ public sealed class RPR_Default : ReaperRotation
         bool NoEnshroudPooling = !EnshroudPooling && Shroud >= 50;
         bool YesEnshroudPooling = EnshroudPooling && Shroud >= 50 && (!PlentifulHarvestPvE.EnoughLevel || Player.HasStatus(true, StatusID.ArcaneCircle) || ArcaneCirclePvE.Cooldown.WillHaveOneCharge(8) || !Player.HasStatus(true, StatusID.ArcaneCircle) && ArcaneCirclePvE.Cooldown.WillHaveOneCharge(65) && !ArcaneCirclePvE.Cooldown.WillHaveOneCharge(50) || !Player.HasStatus(true, StatusID.ArcaneCircle) && Shroud >= 90);
         bool IsIdealHost = Player.HasStatus(true, StatusID.IdealHost);
+
+        if (CombatElapsedLess(10) && IsLastGCD(true, SoulSlicePvE) && ArcaneCirclePvE.CanUse(out act, skipAoeCheck: true)) return true;
 
         if (IsBurst)
         {
@@ -114,7 +116,7 @@ public sealed class RPR_Default : ReaperRotation
             {
                 if (CommunioPvE.EnoughLevel)
                 {
-                    if (!IsMoving && CommunioPvE.CanUse(out act, skipAoeCheck: true))
+                    if (/*!IsMoving &&*/ CommunioPvE.CanUse(out act, skipAoeCheck: true))
                     {
                         return true;
                     }

@@ -6,11 +6,17 @@ namespace DefaultRotations.Healer;
 public sealed class SGE_Kirbo : SageRotation
 {
     #region Config Options
+    [RotationConfig(CombatType.PvE, Name = "Limit DoT useage to only when needed")]
+    public bool LimitDoT { get; set; } = false;
+
     [RotationConfig(CombatType.PvE, Name = "Use spells with cast times to heal. (Ignored if you are the only healer in party)")]
     public bool GCDHeal { get; set; } = false;
 
     [RotationConfig(CombatType.PvE, Name = "Use Pneuma as starter in countdown.")]
     public bool PneumaInCountdown { get; set; } = false;
+
+    [RotationConfig(CombatType.PvE, Name = "Use Prognosis in countdown.")]
+    public bool PrognosisInCountdown { get; set; } = false;
 
     [Range(0.1f, 5f, ConfigUnitType.Seconds)]
     [RotationConfig(CombatType.PvE, Name = "At what countdown second to use Pneuma.")]
@@ -68,10 +74,13 @@ public sealed class SGE_Kirbo : SageRotation
     public float PneumaAOETankHeal { get; set; } = 0.6f;
     #endregion
 
-
     #region Countdown Logic
     protected override IAction? CountDownAction(float remainTime)
     {
+        if (PrognosisInCountdown && remainTime <= 10 && !Player.HasStatus(true, StatusID.EukrasianPrognosis) && EukrasiaPvE.CanUse(out var act2)) return act2;
+
+        if (PrognosisInCountdown && remainTime <= 10 && Player.HasStatus(true, StatusID.Eukrasia) && PrognosisPvE.CanUse(out var act0)) return act0;
+
         if (PneumaInCountdown && remainTime <= PneumaInCountdownTimer && PneumaPvE.CanUse(out var act1)) return act1;
 
         if (!PneumaInCountdown && remainTime <= 1.5 && DosisPvE.CanUse(out var act)) return act;
@@ -89,7 +98,6 @@ public sealed class SGE_Kirbo : SageRotation
 
         return base.AttackAbility(nextGCD, out act);
     }
-
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
         if (base.EmergencyAbility(nextGCD, out act)) return true;
@@ -172,7 +180,7 @@ public sealed class SGE_Kirbo : SageRotation
     [RotationDesc(ActionID.TaurocholePvE, ActionID.KeracholePvE, ActionID.DruocholePvE, ActionID.HolosPvE, ActionID.PhysisPvE, ActionID.PanhaimaPvE)]
     protected override bool HealSingleAbility(IAction nextGCD, out IAction? act)
     {
-        //if (TaurocholePvE.CanUse(out act)) return true;
+        //if (TaurocholePvE.CanUse(out act)) return true
 
         var tankTaurochole = PartyMembers.GetJobCategory(JobRole.Tank);
         if (TaurocholeHealOnTanks && TaurocholePvE.CanUse(out act) && tankTaurochole.Any(t => t.GetHealthRatio() < OGCDTankHeal)) return true;
@@ -313,16 +321,16 @@ public sealed class SGE_Kirbo : SageRotation
             }
         }
 
-        if (PhlegmaIiiPvE.CanUse(out act, usedUp: IsMoving, skipAoeCheck: true)) return true;
-        if (!PhlegmaIiiPvE.EnoughLevel && PhlegmaIiPvE.CanUse(out act, usedUp: IsMoving, skipAoeCheck: true)) return true;
-        if (!PhlegmaIiPvE.EnoughLevel && PhlegmaPvE.CanUse(out act, usedUp: IsMoving, skipAoeCheck: true)) return true;
+        if (PhlegmaIiiPvE.CanUse(out act, usedUp: IsMoving)) return true;
+        if (PhlegmaIiPvE.CanUse(out act, usedUp: IsMoving)) return true;
+        if (PhlegmaPvE.CanUse(out act, usedUp: IsMoving)) return true;
 
         if (PartyMembers.Any(b => b.GetHealthRatio() < PneumaSTPartyHeal && !b.IsDead) || PartyMembers.GetJobCategory(JobRole.Tank).Any(t => t.GetHealthRatio() < PneumaSTTankHeal && !t.IsDead))
         {
-            if (PneumaPvE.CanUse(out act, skipAoeCheck: true)) return true;
+            if (PneumaPvE.CanUse(out act)) return true;
         }
 
-        if (IsMoving && ToxikonPvE.CanUse(out act, skipAoeCheck: true)) return true;
+        if (IsMoving && ToxikonPvE.CanUse(out act)) return true;
 
         if (EukrasianDyskrasiaPvE.CanUse(out _, skipCastingCheck: true))
         {
@@ -334,10 +342,14 @@ public sealed class SGE_Kirbo : SageRotation
             }
         }
 
-        if (DyskrasiaPvE.CanUse(out act)) return true;
+        if (NumberOfHostilesInRange >= 2 && DyskrasiaPvE.CanUse(out act)) return true;
 
         if (EukrasianDosisPvE.CanUse(out _, skipCastingCheck: true))
         {
+            // TODO: find fix as it only works for currrently in combat targets and hostile target only applies to last target
+            if (LimitDoT 
+                && HostileTarget.HasStatus(true, StatusID.EukrasianDosis, StatusID.EukrasianDosisIi, StatusID.EukrasianDosisIii) 
+                && HostileTarget.StatusTime(true, StatusID.EukrasianDosis, StatusID.EukrasianDosisIi, StatusID.EukrasianDosisIii) >= 10) return false;
             if (EukrasiaPvE.CanUse(out act, skipCastingCheck: true)) return true;
             if (DosisPvE.CanUse(out act))
             {
@@ -363,7 +375,7 @@ public sealed class SGE_Kirbo : SageRotation
     {
         if (PartyMembersAverHP < PneumaAOEPartyHeal || DyskrasiaPvE.CanUse(out _) && PartyMembers.GetJobCategory(JobRole.Tank).Any(t => t.GetHealthRatio() < PneumaAOETankHeal))
         {
-            if (PneumaPvE.CanUse(out act, skipAoeCheck: true)) return true;
+            if (PneumaPvE.CanUse(out act)) return true;
         }
 
         if (Player.HasStatus(false, StatusID.EukrasianDiagnosis, StatusID.EukrasianPrognosis, StatusID.Galvanize))
