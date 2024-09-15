@@ -5,13 +5,10 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
 using KirboRotations.IllegalHelpers;
 
-namespace KirboRotations.PvERotations.Ranged;
+namespace KirboRotations.UltimateRotations.Ranged;
 
 [BetaRotation]
-[Rotation("┏━━━━━━┓\n" +
-               "┃    ┃\n" +
-               "┃        ┃\n" +
-               "┗━━━━━━┛",
+[Rotation("MCH UWU",
     CombatType.PvE,
     GameVersion = $"v.\notation： v...\n\n",
     Description = $"┏━━━━━━━━┓\n" +
@@ -373,7 +370,7 @@ public sealed class MCH_UWU : MachinistRotation
     // Logic for Hypercharge
     private bool CanUseHyperchargePvE(out IAction? act)
     {
-        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true,StatusID.Hypercharged)))
+        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)))
         {
             return HyperchargePvE.CanUse(out act);
         }

@@ -5,13 +5,10 @@ using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
 using KirboRotations.IllegalHelpers;
 
-namespace KirboRotations.PvERotations.Ranged;
+namespace KirboRotations.UltimateRotations.Ranged;
 
 [BetaRotation]
-[Rotation("┏━━━━━━┓\n" +
-               "┃    ┃\n" +
-               "┃        ┃\n" +
-               "┗━━━━━━┛",
+[Rotation("MCH TEA",
     CombatType.PvE,
     GameVersion = $"v.\notation： v...\n\n",
     Description = $"┏━━━━━━━━┓\n" +
@@ -21,7 +18,7 @@ namespace KirboRotations.PvERotations.Ranged;
                    "        \\ (´･ω･｀) ﾉ")]
 [SourceCode(Path = "")]
 [Api(3)]
-public sealed class MCH_UWU : MachinistRotation
+public sealed class MCH_TEA : MachinistRotation
 {
     #region Config Options
     [RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
@@ -373,7 +370,7 @@ public sealed class MCH_UWU : MachinistRotation
     // Logic for Hypercharge
     private bool CanUseHyperchargePvE(out IAction? act)
     {
-        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true,StatusID.Hypercharged)))
+        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)))
         {
             return HyperchargePvE.CanUse(out act);
         }

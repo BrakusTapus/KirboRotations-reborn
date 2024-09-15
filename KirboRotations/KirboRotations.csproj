@@ -25,6 +25,10 @@
         <Folder Include="PvPRotations\Magical" />
         <Folder Include="PvPRotations\Tank" />
         <Folder Include="PvPRotations\Melee" />
+        <Folder Include="UltimateRotations\Magical\" />
+        <Folder Include="UltimateRotations\Healer\" />
+        <Folder Include="UltimateRotations\Melee\" />
+        <Folder Include="UltimateRotations\Tank\" />
     </ItemGroup>
 
     <ItemGroup>
