@@ -57,7 +57,7 @@ public class VPR_Kirbo_PvP : ViperRotation
     protected override bool GeneralGCD(out IAction? act)
     {
         act = null;
-        if (CustomRotationEx.CurrentLimitBreakLevel == 1 && WorldSwallowerPvP.CanUse(out act, true, true, true, true, true, true,1) && HasHostilesInRange && InCombat) return true;
+        if (CustomRotationEx.CurrentLimitBreakLevel == 1 && WorldSwallowerPvP.CanUse(out act, true, false, true, true, true, true,true, 1) && HasHostilesInRange && InCombat) return true;
 
         if (Player.HasStatus(true, StatusID.Guard)) return false;
 
