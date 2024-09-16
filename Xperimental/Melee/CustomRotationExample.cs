@@ -5,7 +5,7 @@
 namespace Xperimental.Melee;
 
 [BetaRotation]
-[Api(3)]
+[Api(4)]
 [Rotation($"Example Custom Rotation", CombatType.None, GameVersion = "0x0x0x0", Description = "An example description for the example Custom Rotation, for example: 'This is just an example!'")]
 [LinkDescription("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3BCylKUHNtb9jmnJi4OMQB4zImS_swIKg9Q&s")]
 public sealed class CustomRotationExample : MonkRotation

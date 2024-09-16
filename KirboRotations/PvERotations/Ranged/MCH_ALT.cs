@@ -1,4 +1,6 @@
 ﻿#pragma warning disable S1066 // Mergeable "if" statements should be combined
+#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable S101 // Types should be named in PascalCase
 
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -20,7 +22,7 @@ namespace KirboRotations.PvERotations.Ranged;
                    "┗∩━━━━━━∩┛\n" +
                    "        \\ (´･ω･｀) ﾉ")]
 [SourceCode(Path = "")]
-[Api(3)]
+[Api(4)]
 public sealed class MCH_UWU : MachinistRotation
 {
     #region Config Options
@@ -33,9 +35,17 @@ public sealed class MCH_UWU : MachinistRotation
     [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
     public bool UseAuto2ndTincture { get; set; } = false;
 
+    [RotationConfig(CombatType.PvE, Name = "Enable UwU Checker.")]
+    public bool EnableUwUChecker { get; set; } = false;
+
+    [RotationConfig(CombatType.PvE, Name = "Enable TEA Checker.")]
+    public bool EnableTEAChecker { get; set; } = false;
+
     [RotationConfig(CombatType.PvE, Name = "Enable experimental features.")]
     public bool ExperimentalFeature { get; set; } = false;
+    #endregion
 
+    #region Properties
     private byte HeatStacks
     {
         get
@@ -44,7 +54,6 @@ public sealed class MCH_UWU : MachinistRotation
             return stacks == byte.MaxValue ? (byte)5 : stacks;
         }
     }
-
     private bool InBurst { get; set; } = false;
     private bool StartOpener { get; set; } = false;
     private bool OpenerHasFinished { get; set; } = false;
@@ -53,6 +62,14 @@ public sealed class MCH_UWU : MachinistRotation
     private int Openerstep { get; set; } = 0;
 
     private bool IsSecond0GCD = false;
+    bool IsNailSmall { get; set; }
+    bool IsNailSmallLowHP { get; set; }
+    bool IsNailBig { get; set; }
+    bool IsTargetLahabrea { get; set; }
+    bool IsTargetMagitekBit { get; set; }
+    bool IsTargetTheUltimaWeapon { get; set; }
+    bool IsTargetJagdDoll { get; set; }
+    bool IsTargetJagdDollLowHP { get; set; }
     #endregion
 
     #region Countdown logic
@@ -81,9 +98,22 @@ public sealed class MCH_UWU : MachinistRotation
     // Determines emergency actions to take based on the next planned GCD action.
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
+
+
         if (StartOpener)
         {
             return Opener(out act);
+        }
+
+        act = null;
+        if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
+        {
+            return false;
+        }
+
+        if (EnableUwUChecker && IsNailSmallLowHP)
+        {
+            return false;
         }
 
         if (UseAuto2ndTincture && ShouldUseBurstMedicine(out act))
@@ -155,6 +185,17 @@ public sealed class MCH_UWU : MachinistRotation
     // Logic for using attack abilities outside of GCD, focusing on burst windows and cooldown management.
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
+        act = null;
+        if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
+        {
+            return false;
+        }
+
+        if (EnableUwUChecker && IsNailSmallLowHP)
+        {
+            return false;
+        }
+
         // Check for not burning Hypercharge below level 52 on AOE
         bool LowLevelHyperCheck = !AutoCrossbowPvE.EnoughLevel && SpreadShotPvE.CanUse(out _);
 
@@ -214,6 +255,17 @@ public sealed class MCH_UWU : MachinistRotation
     // Defines the general logic for determining which global cooldown (GCD) action to take.
     protected override bool GeneralGCD(out IAction? act)
     {
+        act = null;
+        if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
+        {
+            return false;
+        }
+
+        if (EnableUwUChecker && IsNailSmallLowHP)
+        {
+            return false;
+        }
+
         bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
         bool hasTinctureBuff = Player.HasStatus(true, StatusID.Medicated);
 
@@ -347,6 +399,8 @@ public sealed class MCH_UWU : MachinistRotation
         IsInSecond0GCD();
         OpenerReady();
         BurstChecker();
+        UwUChecker();
+        TEAChecker();
     }
 
     private void BurstChecker()
@@ -600,6 +654,32 @@ public sealed class MCH_UWU : MachinistRotation
         // If the conditions are not met, return false.
         return false;
     }
+
+    private void UwUChecker()
+    {
+        bool isNailSmall = Target.Name.ToString() == "Infernal Nail" && !Target.HasStatus(false, StatusID.VulnerabilityDown_1545);
+        bool isNailSmallLowHP = Target.Name.ToString() == "Infernal Nail" && !Target.HasStatus(false, StatusID.VulnerabilityDown_1545) && Target.CurrentHp < 13435;
+        bool isNailBig = Target.Name.ToString() == "Infernal Nail" && Target.HasStatus(false, StatusID.VulnerabilityDown_1545);
+        bool isTargetLahabrea = Target.Name.ToString() == "Lahabrea";
+        bool isTargetMagitekBit = Target.Name.ToString() == "Magitek Bit";
+        bool isTargetTheUltimaWeapon = Target.Name.ToString() == "The Ultima Weapon";
+
+        IsNailSmall = isNailSmall;
+        IsNailSmallLowHP = isNailSmallLowHP;
+        IsNailBig = isNailBig;
+        IsTargetLahabrea = isTargetLahabrea;
+        IsTargetMagitekBit = isTargetMagitekBit;
+        IsTargetTheUltimaWeapon = isTargetTheUltimaWeapon;
+    }
+
+    private void TEAChecker()
+    {
+        bool isTargetJagdDollLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
+        bool isTargetJagdDoll = Target.Name.ToString() == "Jagd Doll";
+
+        IsTargetJagdDollLowHP = isTargetJagdDollLowHP;
+        IsTargetJagdDoll = isTargetJagdDoll;
+    }
     #endregion
 
     public unsafe override void DisplayStatus()
@@ -631,9 +711,6 @@ public sealed class MCH_UWU : MachinistRotation
         ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
         ImGui.Text("DefaultGCDRemain" + DataBased.DefaultGCDRemain.ToString());
         ImGui.Text("Openerstep: " + Openerstep.ToString());
-
-
-
 
         DisplayStatusHelper.EndPaddedChild();
     }

@@ -2,7 +2,7 @@ namespace DefaultRotations.Tank;
 
 [Rotation("Kirbo's WAR", CombatType.PvE, GameVersion = "7.00", Description = "Additional Contributions from Sascha")]
 [SourceCode(Path = "main/DefaultRotations/Tank/WAR_Default.cs")]
-[Api(3)]
+[Api(4)]
 public sealed class WAR_Kirbo : WarriorRotation
 {
     #region Config Options

@@ -2,7 +2,7 @@
 
 #pragma warning disable S1066 // Mergeable "if" statements should be combined
 
-[Api(3)]
+[Api(4)]
 [Rotation("┏━━━━━━┓\n" +
                "┃    ┃\n" +
                "┗━━━━━━┛",

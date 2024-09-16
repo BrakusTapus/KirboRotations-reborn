@@ -4,7 +4,7 @@ namespace DefaultRotations.Magical;
 
 [Rotation("Kirbo's SMN", CombatType.PvE, GameVersion = "7.05")]
 [SourceCode(Path = "main/DefaultRotations/Magical/SMN_Default.cs")]
-[Api(3)]
+[Api(4)]
 public sealed class SMN_Kirbo : SummonerRotation
 {
 

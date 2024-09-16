@@ -1,8 +1,8 @@
-﻿namespace DefaultRotations.Melee;
+﻿namespace KirboRotations.Melee;
 
 [Rotation("Kirbo's RPR", CombatType.PvE, GameVersion = "7.01", Description = "")]
 [SourceCode(Path = "main/DefaultRotations/Melee/RPR_Default.cs")]
-[Api(3)]
+[Api(4)]
 public sealed class RPR_Kirbo : ReaperRotation
 {
     #region Config Options

@@ -9,7 +9,7 @@ namespace DefaultRotations.Magical;
 
 [BetaRotation]
 [Rotation("Kirbo PCT BETA", CombatType.PvE, GameVersion = "7.05", Description = "Kindly created and donated by Rabbs and further update made by Kirbo")]
-[Api(3)]
+[Api(4)]
 public sealed class KirboPctBeta : PictomancerRotation
 {
     public override MedicineType MedicineType => MedicineType.Intelligence;

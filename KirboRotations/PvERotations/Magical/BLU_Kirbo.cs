@@ -2,7 +2,7 @@
 
 [BetaRotation]
 [Rotation("Kirbo's BLU", CombatType.PvE, GameVersion = "7.05", Description = "A BLU rotation that causes depression")]
-[Api(3)]
+[Api(4)]
 public class BLU_Kirbo : BlueMageRotation
 {
 	[RotationConfig(CombatType.PvE, Name = "Just fucking self destruct, lmao")]

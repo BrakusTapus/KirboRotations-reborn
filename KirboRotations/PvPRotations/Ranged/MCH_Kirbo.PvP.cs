@@ -6,7 +6,7 @@ namespace KirboRotations.Ranged;
 
 [BetaRotation]
 [Rotation("Kirbo PvP", CombatType.PvP, GameVersion = "7.06", Description = "Kirbo's Beta Rotation for MCH\nUses LB\nUses Turret")]
-[Api(3)]
+[Api(4)]
 internal class MCH_TESTERPvE : MachinistRotation
 {
     private byte PvP_HeatStacks

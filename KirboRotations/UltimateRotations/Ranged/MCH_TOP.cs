@@ -17,7 +17,7 @@ namespace KirboRotations.UltimateRotations.Ranged;
                    "┗∩━━━━━━∩┛\n" +
                    "        \\ (´･ω･｀) ﾉ")]
 [SourceCode(Path = "")]
-[Api(3)]
+[Api(4)]
 public sealed class MCH_TOP : MachinistRotation
 {
     #region Config Options

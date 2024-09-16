@@ -3,7 +3,7 @@
 namespace KirboRotations.Melee;
 
 [Rotation("Kirbo's PVP", CombatType.PvP, GameVersion = "7.0.1", Description = "")]
-[Api(3)]
+[Api(4)]
 
 public class VPR_Kirbo_PvP : ViperRotation
 {

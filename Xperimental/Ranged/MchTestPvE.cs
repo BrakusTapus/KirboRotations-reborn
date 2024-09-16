@@ -10,7 +10,7 @@ using Action = Lumina.Excel.GeneratedSheets.Action;
 namespace Xperimental.Ranged;
 
 [BetaRotation]
-[Api(3)]
+[Api(4)]
 [Rotation($"PvE TESTING ONLY", CombatType.PvE, GameVersion = "0x0x0x2", Description = "DO NOT USE LIKE REGULAR")]
 public sealed class MchTestPvE : MachinistRotation
 {

@@ -2,7 +2,7 @@
 
 [Rotation("Kirbo PVP", CombatType.PvP, GameVersion = "7.00", Description = "Beta Rotation")]
 [SourceCode(Path = "main/DefaultRotations/PVPRotations/Tank/GNB_Default.PvP.cs")]
-[Api(3)]
+[Api(4)]
 public sealed class GNB_DefaultPvP : GunbreakerRotation
 {
     [RotationConfig(CombatType.PvP, Name = "Sprint")]

@@ -2,7 +2,7 @@ namespace DefaultRotations.Healer;
 
 [Rotation("Kirbo's Sage", CombatType.PvE, GameVersion = "7.01")]
 [SourceCode(Path = "main/DefaultRotations/Healer/SGE_Default.cs")]
-[Api(3)]
+[Api(4)]
 public sealed class SGE_Kirbo : SageRotation
 {
     #region Config Options
