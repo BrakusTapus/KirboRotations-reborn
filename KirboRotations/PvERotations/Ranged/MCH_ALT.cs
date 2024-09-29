@@ -45,14 +45,7 @@ public sealed class MCH_ALT : MachinistRotation
     #endregion
 
     #region Properties
-    private byte HeatStacks
-    {
-        get
-        {
-            byte stacks = Player.StatusStack(true, StatusID.Overheated);
-            return stacks == byte.MaxValue ? (byte)5 : stacks;
-        }
-    }
+    private bool CountDownActive { get; set; } = false;
     private bool InBurst { get; set; } = false;
     private bool StartOpener { get; set; } = false;
     private bool OpenerHasFinished { get; set; } = false;
@@ -69,6 +62,7 @@ public sealed class MCH_ALT : MachinistRotation
     bool IsTargetTheUltimaWeapon { get; set; }
     bool IsTargetJagdDoll { get; set; }
     bool IsTargetJagdDollLowHP { get; set; }
+    public bool OpenerInProgress { get; private set; }
     #endregion
 
     #region Countdown logic
@@ -93,8 +87,17 @@ public sealed class MCH_ALT : MachinistRotation
         {
             if (AirAnchorPvE.CanUse(out var act))
             {
+                StartOpener = true;
                 return act;
             }
+        }
+        if (remainTime > 0.1f)
+        {
+            CountDownActive = true;
+        }
+        if (remainTime <= 0.1f)
+        {
+            CountDownActive = false;
         }
         return base.CountDownAction(remainTime);
     }
@@ -104,8 +107,7 @@ public sealed class MCH_ALT : MachinistRotation
     // Determines emergency actions to take based on the next planned GCD action.
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
-
-        if (StartOpener)
+        if (OpenerInProgress)
         {
             return Opener(out act);
         }
@@ -179,6 +181,11 @@ public sealed class MCH_ALT : MachinistRotation
     // Logic for using attack abilities outside of GCD, focusing on burst windows and cooldown management.
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
+        if (OpenerInProgress)
+        {
+            return Opener(out act);
+        }
+
         // Check for not burning Hypercharge below level 52 on AOE
         bool LowLevelHyperCheck = !AutoCrossbowPvE.EnoughLevel && SpreadShotPvE.CanUse(out _);
 
@@ -238,6 +245,11 @@ public sealed class MCH_ALT : MachinistRotation
     // Defines the general logic for determining which global cooldown (GCD) action to take.
     protected override bool GeneralGCD(out IAction? act)
     {
+        if (OpenerInProgress)
+        {
+            return Opener(out act);
+        }
+
         bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
         bool hasTinctureBuff = Player.HasStatus(true, StatusID.Medicated);
 
@@ -370,6 +382,7 @@ public sealed class MCH_ALT : MachinistRotation
     {
         IsInSecond0GCD();
         OpenerReady();
+        OpenerStarter();
         BurstChecker();
     }
 
@@ -397,7 +410,7 @@ public sealed class MCH_ALT : MachinistRotation
     // Logic for Hypercharge
     private bool CanUseHyperchargePvE(out IAction? act)
     {
-        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true,StatusID.Hypercharged)))
+        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)))
         {
             return HyperchargePvE.CanUse(out act);
         }
@@ -459,6 +472,23 @@ public sealed class MCH_ALT : MachinistRotation
         }
         act = null;
         return false;
+    }
+
+    private void OpenerStarter()
+    {
+        if (OpenerHasFinished)
+        {
+            StartOpener = false;
+            OpenerHasFinished = false;
+        }
+        if (StartOpener)
+        {
+            OpenerInProgress = true;
+        }
+        else
+        {
+            OpenerInProgress = false;
+        }
     }
 
     private bool OpenerReady()
@@ -547,7 +577,7 @@ public sealed class MCH_ALT : MachinistRotation
                 return OpenerController(IsLastGCD(true, FullMetalFieldPvE), FullMetalFieldPvE.CanUse(out act, skipAoeCheck: true));
 
             case 13:
-                return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
             case 14:
                 return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
@@ -587,6 +617,7 @@ public sealed class MCH_ALT : MachinistRotation
 
             case 15:
                 OpenerHasFinished = true;
+                Openerstep = 0;
                 break;
         }
         act = null;
@@ -622,32 +653,20 @@ public sealed class MCH_ALT : MachinistRotation
     {
         float paddingX = ImGui.GetStyle().WindowPadding.X;
         DisplayStatusHelper.BeginPaddedChild("The CustomRotation's status window", true, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-
         ImGui.Text("Rotation: " + Name + " ");
         ImGui.SameLine();
         ImGui.TextDisabled(Description);
-
         DisplayStatusHelper.DisplayGCDStatus();
-
         //var gameobjectID = DataBase.DisplayPlayerGameObjectId();
-
         if (ImGui.Button(nameof(ActionID.PelotonPvE)))
         {
             ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action, (uint)ActionID.PelotonPvE);
         }
-
-        ImGui.Spacing();
-        ImGui.Spacing();
-
-        ImGui.Text("InBurst: " + InBurst.ToString());
-
-        ImGui.Spacing();
-        ImGui.Spacing();
-
-        ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
-        ImGui.Text("DefaultGCDRemain" + DataBased.DefaultGCDRemain.ToString());
-        ImGui.Text("Openerstep: " + Openerstep.ToString());
-
         DisplayStatusHelper.EndPaddedChild();
+        ImGui.Text("OpenerAvailable: " + OpenerAvailable.ToString());
+        ImGui.Text("StartOpener: " + StartOpener.ToString());
+        ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
+        ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
+        ImGui.Text("Openerstep: " + Openerstep.ToString());
     }
 }
