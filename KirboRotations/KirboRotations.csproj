@@ -32,7 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="RotationSolverReborn.Basic" Version="7.0.5.81" />
+        <PackageReference Include="RotationSolverReborn.Basic" Version="7.0.5.134" />
         <PackageReference Include="System.Drawing.Common" Version="8.0.8" />
     </ItemGroup>
 </Project>

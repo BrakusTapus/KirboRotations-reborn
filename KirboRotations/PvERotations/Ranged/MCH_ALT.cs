@@ -3,6 +3,7 @@
 #pragma warning disable S101 // Types should be named in PascalCase
 
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
 using KirboRotations.IllegalHelpers;
 

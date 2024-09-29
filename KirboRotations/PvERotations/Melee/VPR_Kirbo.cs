@@ -32,6 +32,9 @@ public sealed class VPR_Kirbo : ViperRotation
     [RotationConfig(CombatType.PvE, Name = "Experimental Pot Usage(used up to 5 seconds before SerpentsIre comes off cooldown)")]
     public bool BurstMed { get; set; } = false;
 
+    [RotationConfig(CombatType.PvE, Name = "Enable TEA Checker.")]
+    public bool EnableTEAChecker { get; set; } = false; 
+
     #endregion
 
     private static bool IsInBurst => Player.Level > 50 && !Player.WillStatusEnd(0, true, StatusID.RagingStrikes);
@@ -40,6 +43,12 @@ public sealed class VPR_Kirbo : ViperRotation
     [RotationDesc]
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
+        act = null;
+        if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
+        {
+            return false;
+        }
+
         // Uncoiled Fury Combo
         if (UncoiledTwinfangPvE.CanUse(out act)) return true;
         if (UncoiledTwinbloodPvE.CanUse(out act)) return true;
@@ -100,6 +109,12 @@ public sealed class VPR_Kirbo : ViperRotation
 
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
+        act = null;
+        if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
+        {
+            return false;
+        }
+
         ////Reawaken Combo
         if (FirstLegacyPvE.CanUse(out act)) return true;
         if (SecondLegacyPvE.CanUse(out act)) return true;
@@ -118,6 +133,11 @@ public sealed class VPR_Kirbo : ViperRotation
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
+        act = null;
+        if (EnableTEAChecker && Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25)
+        {
+            return false;
+        }
 
         ////Reawaken Combo
         if (OuroborosPvE.CanUse(out act)) return true;
