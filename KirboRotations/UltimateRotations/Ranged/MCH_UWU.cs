@@ -1,5 +1,11 @@
 ﻿#pragma warning disable S1066 // Mergeable "if" statements should be combined
-
+/*
+    Description = $"┏━━━━━━━━┓\n" +
+                   "┃       v...2     ┃\n" +
+                   "┃                 ┃\n" +
+                   "┗∩━━━━━━∩┛\n" +
+                   "        \\ (´･ω･｀) ﾉ")]
+*/
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
@@ -10,12 +16,8 @@ namespace KirboRotations.UltimateRotations.Ranged;
 [BetaRotation]
 [Rotation("MCH UWU",
     CombatType.PvE,
-    GameVersion = $"v.\notation： v...2\n\n",
-    Description = $"┏━━━━━━━━┓\n" +
-                   "┃       v...2     ┃\n" +
-                   "┃                 ┃\n" +
-                   "┗∩━━━━━━∩┛\n" +
-                   "        \\ (´･ω･｀) ﾉ")]
+    GameVersion = $"v.\notation： v...3\n\n",
+    Description = $"")]
 [SourceCode(Path = "")]
 [Api(4)]
 public sealed class MCH_UWU : MachinistRotation
