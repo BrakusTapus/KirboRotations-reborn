@@ -1,6 +1,7 @@
 ﻿#pragma warning disable S1066 // Mergeable "if" statements should be combined
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable S101 // Types should be named in PascalCase
+#pragma warning disable S125 // Sections of code should not be commented out
 
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
@@ -30,6 +31,7 @@ public sealed class MCH_ALT : MachinistRotation
     public bool SkipQueenLogic { get; set; } = true;
 
     //[RotationConfig(CombatType.PvE, Name = "Use LvL 100 Opener")]
+
     //public bool UseLv100Opener { get; set; } = false;
 
     [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
