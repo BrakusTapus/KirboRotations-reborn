@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <AssemblyName>Xperimental</AssemblyName>
-        <AssemblyVersion>0.0.0.2</AssemblyVersion>
+        <AssemblyVersion>0.0.0.3</AssemblyVersion>
         <TargetFramework>net8.0-windows</TargetFramework>
     </PropertyGroup>
 
@@ -29,10 +29,6 @@
                       
     <ItemGroup>
       <PackageReference Update="RotationSolverReborn.Basic" Version="7.0.5.17" />
-    </ItemGroup>                    
-                      
-    <ItemGroup>
-      <Folder Include="Tank\" />
     </ItemGroup>                    
                       
     <ItemGroup>

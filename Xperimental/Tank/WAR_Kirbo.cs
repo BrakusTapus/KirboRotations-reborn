@@ -1,4 +1,4 @@
-namespace DefaultRotations.Tank;
+namespace Xperimental.Tank;
 
 [Rotation("Kirbo's WAR", CombatType.PvE, GameVersion = "7.00", Description = "Additional Contributions from Sascha")]
 [SourceCode(Path = "main/DefaultRotations/Tank/WAR_Default.cs")]
@@ -135,7 +135,7 @@ public sealed class WAR_Kirbo : WarriorRotation
 
         if ((!RampartPvE.Cooldown.IsCoolingDown || RampartPvE.Cooldown.ElapsedAfter(60)) && VengeancePvE.CanUse(out act)) return true;
 
-        if (((VengeancePvE.Cooldown.IsCoolingDown && VengeancePvE.Cooldown.ElapsedAfter(60)) || !VengeancePvE.EnoughLevel) && RampartPvE.CanUse(out act)) return true;
+        if ((VengeancePvE.Cooldown.IsCoolingDown && VengeancePvE.Cooldown.ElapsedAfter(60) || !VengeancePvE.EnoughLevel) && RampartPvE.CanUse(out act)) return true;
 
         return base.DefenseSingleAbility(nextGCD, out act);
     }
@@ -200,10 +200,10 @@ public sealed class WAR_Kirbo : WarriorRotation
     protected override bool HealSingleGCD(out IAction? act)
     {
         if (!NeverscentFlash && NascentFlashPvE.CanUse(out act)
-            && (InCombat && NascentFlashPvE.Target.Target?.GetHealthRatio() < FlashHeal)) return true;
+            && InCombat && NascentFlashPvE.Target.Target?.GetHealthRatio() < FlashHeal) return true;
 
         if (NeverscentFlash && NascentFlashPvE.CanUse(out act)
-            && (InCombat && !Player.HasStatus(true, StatusID.Defiance) && NascentFlashPvE.Target.Target?.GetHealthRatio() < FlashHeal)) return true;
+            && InCombat && !Player.HasStatus(true, StatusID.Defiance) && NascentFlashPvE.Target.Target?.GetHealthRatio() < FlashHeal) return true;
 
         return base.HealSingleGCD(out act);
     }
