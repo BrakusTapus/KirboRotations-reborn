@@ -1,5 +1,11 @@
 ﻿#pragma warning disable S1066 // Mergeable "if" statements should be combined
-
+/*
+    Description = $"┏━━━━━━━━┓\n" +
+                   "┃       v...2     ┃\n" +
+                   "┃                 ┃\n" +
+                   "┗∩━━━━━━∩┛\n" +
+                   "        \\ (´･ω･｀) ﾉ")]
+*/
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
@@ -8,17 +14,13 @@ using KirboRotations.IllegalHelpers;
 namespace KirboRotations.UltimateRotations.Ranged;
 
 [BetaRotation]
-[Rotation("MCH UWU",
+[Rotation("MCH UWU NEW",
     CombatType.PvE,
-    GameVersion = $"v.\notation： v...2\n\n",
-    Description = $"┏━━━━━━━━┓\n" +
-                   "┃       v...2     ┃\n" +
-                   "┃                 ┃\n" +
-                   "┗∩━━━━━━∩┛\n" +
-                   "        \\ (´･ω･｀) ﾉ")]
+    GameVersion = $"v.\notation： v...1\n\n",
+    Description = $"")]
 [SourceCode(Path = "")]
 [Api(4)]
-public sealed class MCH_UWU : MachinistRotation
+public sealed class MCH_UWU_NEW : MachinistRotation
 {
     #region Config Options
     //[RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
@@ -108,44 +110,44 @@ public sealed class MCH_UWU : MachinistRotation
 
         // Reassemble Logic
         // Check next GCD action and conditions for Reassemble.
-        bool isReassembleUsable = nextGCD.IsTheSameTo(true, DrillPvE);
+        bool isReassembleUsable = nextGCD.IsTheSameTo(false, DrillPvE) || nextGCD.IsTheSameTo(ActionID.DrillPvE);
 
         //// Keeps Ricochet and Gauss cannon Even
         //bool isRicochetMore = RicochetPvE.EnoughLevel && GaussRoundPvE.Cooldown.CurrentCharges <= RicochetPvE.Cooldown.CurrentCharges;
         //bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
 
         // Use Barrel Stabilizer on CD if won't cap
-        if (BarrelStabilizerPvE.CanUse(out act))
+        if (BarrelStabilizerPvE.CanUse(out act) && !isTargetPlayer)
         {
             return true;
         }
 
         //if (CombatElapsedLessGCD(10))
         //{
-        if (WildfirePvE.CanUse(out act, true) &&
-            (HeatStacks == 5 ||
-            (nextGCD.IsTheSameTo(true, HotShotPvE) &&
-            (Player.HasStatus(true, StatusID.Hypercharged) || Heat >= 50))))
-        {
-            return true;
-        }
+        //if (WildfirePvE.CanUse(out act, true) &&
+        //    (HeatStacks == 5 ||
+        //    (nextGCD.IsTheSameTo(true, HotShotPvE) &&
+        //    (Player.HasStatus(true, StatusID.Hypercharged) || Heat >= 50))))
+        //{
+        //    return true;
+        //}
 
-        if (CombatElapsedLessGCD(5))
-        {
+        //if (CombatElapsedLessGCD(5))
+        //{
 
-            if (BarrelStabilizerPvE.CanUse(out act))
-            {
-                return true;
-            }
-            if (WildfirePvE.CanUse(out act))
-            {
-                return true;
-            }
-            if (HyperchargePvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
+        //    if (BarrelStabilizerPvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
+        //    if (WildfirePvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
+        //    if (HyperchargePvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
+        //}
 
         //if (WildfirePvE.CanUse(out act, true) &&
         //    (HeatStacks == 5 ||
@@ -326,24 +328,29 @@ public sealed class MCH_UWU : MachinistRotation
         //bool experimentalFeatureNoGCDsBeyondThisPoint = ExperimentalFeature && IsOverheated;
         //if (experimentalFeatureNoGCDsBeyondThisPoint) return false;
 
-        // Check if SpreadShot cannot be used
-        if ((!SpreadShotPvE.CanUse(out _) || SpreadShotPvE.CanUse(out _)) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
-        {
-        if (AirAnchorPvE.EnoughLevel && AirAnchorPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
-        {
-            return true;
-        }
-
-        if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
-        {
-            return true;
-        }
-
         // Check if Drill can be used
         if (DrillPvE.EnoughLevel && DrillPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
         {
             return true;
         }
+
+        // Check if SpreadShot cannot be used
+        if ((!SpreadShotPvE.CanUse(out _) || SpreadShotPvE.CanUse(out _)) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+        {
+            // Check if Drill can be used
+            if (DrillPvE.EnoughLevel && DrillPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+            {
+                return true;
+            }
+            if (AirAnchorPvE.EnoughLevel && AirAnchorPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+            {
+                return true;
+            }
+
+            if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+            {
+                return true;
+            }
         }
 
         if (SpreadShotPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit && !isTargetIfrit)
