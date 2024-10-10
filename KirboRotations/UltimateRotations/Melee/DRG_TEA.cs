@@ -1,6 +1,6 @@
 namespace KirboRotations.UltimateRotations.Melee;
 
-[Rotation("Default", CombatType.PvE, GameVersion = "7.05")]
+[Rotation("DRG TEA", CombatType.PvE, GameVersion = "7.05")]
 [Api(4)]
 
 public sealed class DRG_TEA : DragoonRotation
