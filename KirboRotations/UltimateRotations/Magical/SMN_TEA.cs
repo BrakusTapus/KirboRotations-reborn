@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
 
-namespace DefaultRotations.Magical;
+namespace KirboRotations.UltimateRotations.Magical;
 
-[Rotation("Kirbo's SMN", CombatType.PvE, GameVersion = "7.05")]
+[Rotation("SMN TEA", CombatType.PvE, GameVersion = "7.05")]
 [Api(4)]
-public sealed class SMN_Default : SummonerRotation
+public sealed class SMN_TEA : SummonerRotation
 {
 
     #region Config Options
@@ -38,6 +38,9 @@ public sealed class SMN_Default : SummonerRotation
     [RotationConfig(CombatType.PvE, Name = "Use this if there's no other raid buff in your party")]
     public bool SecondTypeOpenerLogic { get; set; } = false;
 
+    [RotationConfig(CombatType.PvE, Name = "Enable experimental TEA features.")]
+    public bool ExperimentalTEAFeature { get; set; } = false;
+
     #endregion
 
 
@@ -65,10 +68,17 @@ public sealed class SMN_Default : SummonerRotation
     #region oGCD Logic
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
+        act = null;
+        bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
+        if (isJagdDollAndLowHP && ExperimentalTEAFeature)
+        {
+            return false;
+        }
+
         bool isTargetBoss = HostileTarget?.IsBossFromTTK() ?? false;
         bool isTargetDying = HostileTarget?.IsDying() ?? false;
         bool targetIsBossAndDying = isTargetBoss && isTargetDying;
-        bool inBigInvocation = !SummonBahamutPvE.EnoughLevel || (InBahamut || InPhoenix || InSolarBahamut);
+        bool inBigInvocation = !SummonBahamutPvE.EnoughLevel || InBahamut || InPhoenix || InSolarBahamut;
         bool inSolarUnique = Player.Level == 100 ? !InBahamut && !InPhoenix && InSolarBahamut : InBahamut && !InPhoenix;
         if (SecondTypeOpenerLogic)
         {
@@ -141,28 +151,40 @@ public sealed class SMN_Default : SummonerRotation
 
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
+        act = null;
+        bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
+        if (isJagdDollAndLowHP && ExperimentalTEAFeature)
+        {
+            return false;
+        }
         bool anyBigInvocationIsCoolingDown = SummonBahamutPvE.Cooldown.IsCoolingDown || SummonSolarBahamutPvE.Cooldown.IsCoolingDown || SummonPhoenixPvE.Cooldown.IsCoolingDown;
         if (AddSwiftcastOnGaruda && nextGCD == SlipstreamPvE && Player.Level > 86 && !InBahamut && !InPhoenix && !InSolarBahamut)
         {
             if (SwiftcastPvE.CanUse(out act)) return true;
         }
 
-        if ((RadiantOnCooldown && RadiantAegisPvE.Cooldown.CurrentCharges == 2 || RadiantAegisPvE.Cooldown.CurrentCharges == 1 && RadiantAegisPvE.Cooldown.WillHaveOneCharge(5)) && (anyBigInvocationIsCoolingDown && Player.Level <= 100) && RadiantAegisPvE.CanUse(out act)) return true;
+        if ((RadiantOnCooldown && RadiantAegisPvE.Cooldown.CurrentCharges == 2 || RadiantAegisPvE.Cooldown.CurrentCharges == 1 && RadiantAegisPvE.Cooldown.WillHaveOneCharge(5)) && anyBigInvocationIsCoolingDown && Player.Level <= 100 && RadiantAegisPvE.CanUse(out act)) return true;
         if (RadiantOnCooldown && Player.Level < 88 && anyBigInvocationIsCoolingDown && RadiantAegisPvE.CanUse(out act)) return true;
 
         return base.EmergencyAbility(nextGCD, out act);
     }
-    
+
     #endregion
 
     #region GCD Logic
     protected override bool GeneralGCD(out IAction? act)
     {
+        act = null;
+        bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
+        if (isJagdDollAndLowHP && ExperimentalTEAFeature)
+        {
+            return false;
+        }
         if (SummonCarbunclePvE.CanUse(out act)) return true;
 
         if (SummonBahamutPvE.CanUse(out act)) return true;
         if ((Player.HasStatus(false, StatusID.SearingLight) || SearingLightPvE.Cooldown.IsCoolingDown) && SummonBahamutPvE.CanUse(out act)) return true;
-        if (IsBurst && (!SearingLightPvE.Cooldown.IsCoolingDown && SummonSolarBahamutPvE.CanUse(out act))) return true;
+        if (IsBurst && !SearingLightPvE.Cooldown.IsCoolingDown && SummonSolarBahamutPvE.CanUse(out act)) return true;
 
         if (AddSwiftcastOnGaruda && SlipstreamPvE.CanUse(out act, skipAoeCheck: true, skipCastingCheck: !SwiftcastPvE.Cooldown.IsCoolingDown || HasSwift)) return true;
         if (SlipstreamPvE.CanUse(out act, skipAoeCheck: true)) return true;

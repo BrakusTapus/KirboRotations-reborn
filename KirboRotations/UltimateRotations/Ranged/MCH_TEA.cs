@@ -276,7 +276,8 @@ public sealed class MCH_TEA : MachinistRotation
             }
 
             // Check if Drill can be used
-            if (DrillPvE.CanUse(out act))
+            bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
+            if (DrillPvE.CanUse(out act) && !isJagdDoll)
             {
                 return true;
             }
@@ -291,10 +292,10 @@ public sealed class MCH_TEA : MachinistRotation
                 return true;
             }
 
-            if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true))
-            {
-                return true;
-            }
+            //if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true))
+            //{
+            //    return true;
+            //}
 
             if (Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
             {
