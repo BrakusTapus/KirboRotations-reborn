@@ -10,6 +10,11 @@ internal class DataBased
     public static unsafe float DefaultGCDTotal => ActionManagerHelper.GetDefaultRecastTime();
     public static unsafe float DefaultGCDRemain => ActionManagerHelper.GetDefaultRecastTime() - ActionManagerHelper.GetDefaultRecastTimeElapsed();
     public static unsafe float DefaultGCDElapsed => ActionManagerHelper.GetDefaultRecastTimeElapsed();
+    public const float MinAnimationLock = 0.6f;
+    public static float NextAbilityToNextGCD => Math.Max(0, DefaultGCDRemain - Math.Max(ActionManagerHelper.GetCurrentAnimationLock(), MinAnimationLock));
+
+    // Define the OnSecondAbilitySlot boolean property
+    public static bool OnSecondAbilitySlot => CustomRotation.InCombat && (DefaultGCDRemain > 0.60f && DefaultGCDRemain <= 0.82f);
 
     public static void DisplayPlayerGameObjectId(FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject player)
     {

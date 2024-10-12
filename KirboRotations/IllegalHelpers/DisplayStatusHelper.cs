@@ -60,8 +60,13 @@ internal static class DisplayStatusHelper
         float progressBarWidth = windowSize - (2 * padding);
         Vector2 progressBarSize = new Vector2(progressBarWidth, 20);
 
+        // NextAbilityToNextGCD
 
         ImGui.Text("GCD Remain: " + DataBased.DefaultGCDRemain.ToString("F2"));
+        ImGui.SameLine();
+        float textsize2 = ImGui.CalcTextSize("NextAbilityToNextGCD: " + CustomRotation.NextAbilityToNextGCD.ToString("F2")).X;
+        ImGui.SetCursorPosX(ImGui.GetWindowContentRegionMax().X - textsize2 - ImGui.GetStyle().ItemSpacing.X);
+        ImGui.Text("NextAbilityToNextGCD: " + CustomRotation.NextAbilityToNextGCD.ToString("F2"));
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padding);
         ImGui.ProgressBar(DataBased.DefaultGCDRemain / DataBased.DefaultGCDTotal, progressBarSize, "");
 
