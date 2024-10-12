@@ -35,7 +35,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         }
     }
 
-    private bool InBurst { get; set; } = false;
+
     public bool OpenerHasFinishedDummy { get; private set; }
     public bool OpenerHasFinished { get; private set; }
     public int Openerstep { get; private set; }
@@ -43,7 +43,8 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     public bool OpenerInProgress { get; private set; }
     public bool StartOpener { get; private set; }
 
-    private bool IsSecond0GCD = false;
+    private bool InBurst => Player.HasStatus(true, StatusID.Wildfire_1946);
+    private bool IsSecond0GCD => WeaponRemain >= 0.59f && WeaponRemain <= 0.80f && CustomRotationEx.GetCurrentAnimationLock() == 0;
     #endregion
 
     #region Countdown logic
@@ -381,10 +382,8 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     #region Extra Methods
     protected override void UpdateInfo()
     {
-        IsInSecond0GCD();
         OpenerReady();
         OpenerStarter();
-        BurstChecker();
     }
 
     private void OpenerStarter()
@@ -467,27 +466,6 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         return OpenerHasFinishedDummy = false;
     }
 
-    private void BurstChecker()
-    {
-        bool hasWildfire = Player.HasStatus(true, StatusID.Wildfire_1946);
-        InBurst = hasWildfire;
-    }
-
-    // 1946
-    private void IsInSecond0GCD()
-    {
-        float remainingGCD = DataBased.DefaultGCDRemain;
-
-        if (remainingGCD >= 0.6f && remainingGCD <= 1.2f)
-        {
-            IsSecond0GCD = true;
-        }
-        else
-        {
-            IsSecond0GCD = false;
-        }
-    }
-
     // Logic for Hypercharge
     private bool CanUseHyperchargePvE(out IAction? act)
     {
@@ -541,3 +519,14 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         ImGui.Text("Openerstep: " + Openerstep.ToString());
     }
 }
+
+/*
+    bool IsNailSmall { get; set; }
+    bool IsNailSmallLowHP { get; set; }
+    bool IsNailBig { get; set; }
+    bool IsTargetLahabrea { get; set; }
+    bool IsTargetMagitekBit { get; set; }
+    bool IsTargetTheUltimaWeapon { get; set; }
+    bool IsTargetJagdDoll { get; set; }
+    bool IsTargetJagdDollLowHP { get; set; }
+*/
