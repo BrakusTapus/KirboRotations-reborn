@@ -118,7 +118,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         //bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
 
         // Use Barrel Stabilizer on CD if won't cap
-        if (BarrelStabilizerPvE.CanUse(out act) && !isTargetPlayer)
+        if (BarrelStabilizerPvE.CanUse(out act) && Target != Player && Target.GetHealthRatio() >= 0.25f)
         {
             return true;
         }
@@ -446,18 +446,21 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         switch (Openerstep)
         {
             case 0:
-                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
 
             case 1:
-                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
             case 2:
-                return OpenerController(IsLastGCD(false, HotShotPvE), HotShotPvE.CanUse(out act, usedUp: true));
+                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
             case 3:
-                return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+                return OpenerController(IsLastGCD(false, HotShotPvE), HotShotPvE.CanUse(out act, usedUp: true));
 
             case 4:
+                return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+
+            case 5:
                 OpenerHasFinished = true;
                 Openerstep = 0;
                 break;
@@ -485,7 +488,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
                      // Drill Charge Detection
                      DrillPvE.EnoughLevel && DrillPvE.Cooldown.WillHaveOneCharge(REST_TIME)
                      ||
-                     Target.GetHealthRatio() <= 0.20))
+                     Target.GetHealthRatio() <= 0.15))
         {
             act = null;
             return false;

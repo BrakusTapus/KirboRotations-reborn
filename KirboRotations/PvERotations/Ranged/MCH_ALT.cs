@@ -192,7 +192,12 @@ public sealed class MCH_ALT : MachinistRotation
         }
 
         // Check for not burning Hypercharge below level 52 on AOE
+        bool lateWeave = WeaponRemain >= 0.59f && WeaponRemain <= 0.80f;
         bool LowLevelHyperCheck = !AutoCrossbowPvE.EnoughLevel && SpreadShotPvE.CanUse(out _);
+        //if (lateWeave && (IsLastAbility(false, HyperchargePvE) || Player.HasStatus(true, StatusID.Hypercharged)))
+        //{
+        //    return WildfirePvE.CanUse(out act);
+        //}
 
         // If Wildfire is active, use Hypercharge.....Period
         if (Player.HasStatus(true, StatusID.Wildfire_1946) && !nextGCD.IsTheSameTo(true, FullMetalFieldPvE)) // could be ruining things
@@ -206,8 +211,6 @@ public sealed class MCH_ALT : MachinistRotation
             {
                 return true;
             }
-
-            bool lateWeave = WeaponRemain >= 0.59f && WeaponRemain <= 0.80f;
 
             if (lateWeave &&
                 ((IsLastAbility(false, HyperchargePvE) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)) &&
