@@ -35,7 +35,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         }
     }
 
-    private bool InBurst { get; set; } = false;
+
     public bool OpenerHasFinishedDummy { get; private set; }
     public bool OpenerHasFinished { get; private set; }
     public int Openerstep { get; private set; }
@@ -43,7 +43,8 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     public bool OpenerInProgress { get; private set; }
     public bool StartOpener { get; private set; }
 
-    private bool IsSecond0GCD = false;
+    private bool InBurst => Player.HasStatus(true, StatusID.Wildfire_1946);
+    private bool IsSecond0GCD => WeaponRemain >= 0.59f && WeaponRemain <= 0.80f && CustomRotationEx.GetCurrentAnimationLock() == 0;
     #endregion
 
     #region Countdown logic
@@ -117,7 +118,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         //bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
 
         // Use Barrel Stabilizer on CD if won't cap
-        if (BarrelStabilizerPvE.CanUse(out act) && !isTargetPlayer)
+        if (BarrelStabilizerPvE.CanUse(out act) && Target != Player && Target.GetHealthRatio() >= 0.25f)
         {
             return true;
         }
@@ -381,10 +382,8 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     #region Extra Methods
     protected override void UpdateInfo()
     {
-        IsInSecond0GCD();
         OpenerReady();
         OpenerStarter();
-        BurstChecker();
     }
 
     private void OpenerStarter()
@@ -447,45 +446,27 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         switch (Openerstep)
         {
             case 0:
-                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
 
             case 1:
-                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
             case 2:
-                return OpenerController(IsLastGCD(false, HotShotPvE), HotShotPvE.CanUse(out act, usedUp: true));
+                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
             case 3:
-                return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+                return OpenerController(IsLastGCD(false, HotShotPvE), HotShotPvE.CanUse(out act, usedUp: true));
 
             case 4:
+                return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+
+            case 5:
                 OpenerHasFinished = true;
                 Openerstep = 0;
                 break;
         }
         act = null;
         return OpenerHasFinishedDummy = false;
-    }
-
-    private void BurstChecker()
-    {
-        bool hasWildfire = Player.HasStatus(true, StatusID.Wildfire_1946);
-        InBurst = hasWildfire;
-    }
-
-    // 1946
-    private void IsInSecond0GCD()
-    {
-        float remainingGCD = DataBased.DefaultGCDRemain;
-
-        if (remainingGCD >= 0.6f && remainingGCD <= 1.2f)
-        {
-            IsSecond0GCD = true;
-        }
-        else
-        {
-            IsSecond0GCD = false;
-        }
     }
 
     // Logic for Hypercharge
@@ -507,7 +488,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
                      // Drill Charge Detection
                      DrillPvE.EnoughLevel && DrillPvE.Cooldown.WillHaveOneCharge(REST_TIME)
                      ||
-                     Target.GetHealthRatio() <= 0.20))
+                     Target.GetHealthRatio() <= 0.15))
         {
             act = null;
             return false;
@@ -541,3 +522,14 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         ImGui.Text("Openerstep: " + Openerstep.ToString());
     }
 }
+
+/*
+    bool IsNailSmall { get; set; }
+    bool IsNailSmallLowHP { get; set; }
+    bool IsNailBig { get; set; }
+    bool IsTargetLahabrea { get; set; }
+    bool IsTargetMagitekBit { get; set; }
+    bool IsTargetTheUltimaWeapon { get; set; }
+    bool IsTargetJagdDoll { get; set; }
+    bool IsTargetJagdDollLowHP { get; set; }
+*/

@@ -24,14 +24,14 @@ public sealed class MCH_TEA : MachinistRotation
     [RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
     public bool SkipQueenLogic { get; set; } = true;
 
-    //[RotationConfig(CombatType.PvE, Name = "Use LvL 100 Opener")]
-    //public bool UseLv100Opener { get; set; } = false;
-
     [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
     public bool UseAuto2ndTincture { get; set; } = false;
 
     [RotationConfig(CombatType.PvE, Name = "Enable experimental features.")]
     public bool ExperimentalFeature { get; set; } = false;
+
+    [RotationConfig(CombatType.PvE, Name = "Turn on if rotation becomes unstable.")]
+    public bool TestDisablePointlessCode { get; set; } = false;
 
     private byte HeatStacks
     {
@@ -42,7 +42,6 @@ public sealed class MCH_TEA : MachinistRotation
         }
     }
 
-    private bool InBurst { get; set; } = false;
     private bool StartOpener { get; set; } = false;
     private bool OpenerHasFinished { get; set; } = false;
     private bool OpenerHasFinishedDummy { get; set; } = false;
@@ -50,7 +49,8 @@ public sealed class MCH_TEA : MachinistRotation
     private int Openerstep { get; set; } = 0;
     public bool OpenerInProgress { get; private set; }
 
-    private bool IsSecond0GCD = false;
+    private bool InBurst => Player.HasStatus(true, StatusID.Wildfire_1946);
+    private bool IsSecond0GCD => WeaponRemain >= 0.59f && WeaponRemain <= 0.80f && CustomRotationEx.GetCurrentAnimationLock() == 0;
     #endregion
 
     #region Countdown logic
@@ -230,9 +230,6 @@ public sealed class MCH_TEA : MachinistRotation
     // Defines the general logic for determining which global cooldown (GCD) action to take.
     protected override bool GeneralGCD(out IAction? act)
     {
-        bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
-        bool hasTinctureBuff = Player.HasStatus(true, StatusID.Medicated);
-
         act = null;
         bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
         if (isJagdDollAndLowHP)
@@ -241,7 +238,7 @@ public sealed class MCH_TEA : MachinistRotation
         }
 
         // Checks and executes AutoCrossbow or HeatBlast if conditions are met (overheated state).
-        if (AutoCrossbowPvE.CanUse(out act))
+        if (TestDisablePointlessCode && AutoCrossbowPvE.CanUse(out act))
         {
             return true;
         }
@@ -255,90 +252,90 @@ public sealed class MCH_TEA : MachinistRotation
         if (experimentalFeatureNoGCDsBeyondThisPoint) return false;
 
         // Executes Bioblaster, and then checks for AirAnchor or HotShot, and Drill based on availability and conditions.
-        if (BioblasterPvE.CanUse(out act))
-        {
-            return true;
-        }
+        //if (BioblasterPvE.CanUse(out act))
+        //{
+        //    return true;
+        //}
 
         // Check if SpreadShot cannot be used
-        if (!SpreadShotPvE.CanUse(out _))
+        //if (!SpreadShotPvE.CanUse(out _))
+        //{
+        // Check if AirAnchor can be used
+        if (AirAnchorPvE.CanUse(out act))
         {
-            // Check if AirAnchor can be used
-            if (AirAnchorPvE.CanUse(out act))
-            {
-                return true;
-            }
-
-            // If not at the required level for AirAnchor and HotShot can be used
-            if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act))
-            {
-                return true;
-            }
-
-            // Check if Drill can be used
-            bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
-            if (DrillPvE.CanUse(out act) && !isJagdDoll)
-            {
-                return true;
-            }
-
-            if (ExcavatorPvE.CanUse(out act, usedUp: true))
-            {
-                return true;
-            }
-
-            if (ChainSawPvE.CanUse(out act, usedUp: true))
-            {
-                return true;
-            }
-
-            //if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true))
-            //{
-            //    return true;
-            //}
-
-            if (Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
-            {
-                return true;
-            }
+            return true;
         }
+
+        // If not at the required level for AirAnchor and HotShot can be used
+        if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act))
+        {
+            return true;
+        }
+
+        // Check if Drill can be used
+        bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
+        if (DrillPvE.CanUse(out act, usedUp: true) && !isJagdDoll)
+        {
+            return true;
+        }
+
+        if (TestDisablePointlessCode && ExcavatorPvE.CanUse(out act, usedUp: true))
+        {
+            return true;
+        }
+
+        if (TestDisablePointlessCode && ChainSawPvE.CanUse(out act, usedUp: true))
+        {
+            return true;
+        }
+
+        //if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true))
+        //{
+        //    return true;
+        //}
+
+        if (TestDisablePointlessCode && Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
+        {
+            return true;
+        }
+        //}
 
         // Special condition for using ChainSaw outside of AoE checks if no action is chosen within 4 GCDs.
-        if (!CombatElapsedLessGCD(1) && ChainSawPvE.CanUse(out act, skipAoeCheck: true))
+        if (TestDisablePointlessCode && !CombatElapsedLessGCD(1) && ChainSawPvE.CanUse(out act, skipAoeCheck: true))
         {
             return true;
         }
 
-        if (ExcavatorPvE.CanUse(out act, skipAoeCheck: true))
+        if (TestDisablePointlessCode && ExcavatorPvE.CanUse(out act, skipAoeCheck: true))
         {
             return true;
         }
 
-        if (!ChainSawPvE.Cooldown.WillHaveOneCharge(6f) && !CombatElapsedLessGCD(6))
-        {
-            if (DrillPvE.CanUse(out act, usedUp: true))
-            {
-                return true;
-            }
-        }
+        //if (!ChainSawPvE.Cooldown.WillHaveOneCharge(6f) && !CombatElapsedLessGCD(6))
+        //{
+        //    if (DrillPvE.CanUse(out act, usedUp: true))
+        //    {
+        //        return true;
+        //    }
+        //}
 
         // AoE actions: ChainSaw and SpreadShot based on their usability.
-        if (SpreadShotPvE.CanUse(out _))
-        {
-            if (ChainSawPvE.CanUse(out act))
-            {
-                return true;
-            }
+        //if (SpreadShotPvE.CanUse(out _))
+        //{
+        //    if (ChainSawPvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
 
-            if (ExcavatorPvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
-        if (FullMetalFieldPvE.CanUse(out act))
-        {
-            return true;
-        }
+        //    if (ExcavatorPvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
+        //}
+        //if (FullMetalFieldPvE.CanUse(out act))
+        //{
+        //    return true;
+        //}
 
         if (SpreadShotPvE.CanUse(out act))
         {
@@ -368,30 +365,7 @@ public sealed class MCH_TEA : MachinistRotation
     #region Extra Methods
     protected override void UpdateInfo()
     {
-        IsInSecond0GCD();
         OpenerReady();
-        BurstChecker();
-    }
-
-    private void BurstChecker()
-    {
-        bool hasWildfire = Player.HasStatus(true, StatusID.Wildfire_1946);
-        InBurst = hasWildfire;
-    }
-
-    // 1946
-    private void IsInSecond0GCD()
-    {
-        float remainingGCD = DataBased.DefaultGCDRemain;
-
-        if (remainingGCD >= 0.6f && remainingGCD <= 1.2f)
-        {
-            IsSecond0GCD = true;
-        }
-        else
-        {
-            IsSecond0GCD = false;
-        }
     }
 
     // Logic for Hypercharge

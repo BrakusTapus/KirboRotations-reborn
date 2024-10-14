@@ -2,7 +2,14 @@
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable S101 // Types should be named in PascalCase
 #pragma warning disable S125 // Sections of code should not be commented out
+//Note when using the Ability.CanUse(out act, isLastAbility: true)
+// NextAbilityToNextGCD - 0.60s 
+// 0.60s + isLastAbilityTimer 
+// NextAbilityToNextGCD must be equal or lower then 0.60s + isLastAbilityTimer
+// NextAbilityToNextGCD ranges from -0.60s ~ 1.90s
+// If overheated ranges from -0.60s ~ 0.90s
 
+using System.ComponentModel;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Misc;
 using KirboRotations.Common;
@@ -11,28 +18,29 @@ using KirboRotations.IllegalHelpers;
 namespace KirboRotations.PvERotations.Ranged;
 
 [BetaRotation]
-[Rotation("┏━━━━━━┓\n" +
-               "┃    ┃\n" +
-               "┃        ┃\n" +
-               "┗━━━━━━┛",
-    CombatType.PvE,
-    GameVersion = $"v.\notation： v...8\n\n",
-    Description = $"┏━━━━━━━━┓\n" +
-                   "┃       v...8     ┃\n" +
-                   "┃                 ┃\n" +
-                   "┗∩━━━━━━∩┛\n" +
-                   "        \\ (´･ω･｀) ﾉ")]
-[SourceCode(Path = "")]
+[Rotation(
+"┏━━━━━━┓\n" + "┃    ┃\n" + "┃        ┃\n" + "┗━━━━━━┛",
+CombatType.PvE,
+GameVersion = $"v.\notation： v...9\n\n",
+Description = $"┏━━━━━━━━┓\n" + "┃       v...9     ┃\n" + "┃                 ┃\n" + "┗∩━━━━━━∩┛\n" + "        \\ (´･ω･｀) ﾉ")]
 [Api(4)]
 public sealed class MCH_ALT : MachinistRotation
 {
     #region Config Options
-    [RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
+    public enum Openers : byte
+    {
+        [Description("Default-Opener")] Default,
+
+        [Description("Alternative-Opener")] Alternative,
+
+        [Description("Beta-Opener")] Beta,
+    }
+
+    [RotationConfig(CombatType.PvE, Name = "Immediately use Rook Autoturret/Automaton Queen if battery is 50+ ")]
     public bool SkipQueenLogic { get; set; } = true;
 
-    //[RotationConfig(CombatType.PvE, Name = "Use LvL 100 Opener")]
-
-    //public bool UseLv100Opener { get; set; } = false;
+    [RotationConfig(CombatType.PvE, Name = "Opener")]
+    public Openers SelectedOpener { get; set; } = Openers.Default;
 
     [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
     public bool UseAuto2ndTincture { get; set; } = false;
@@ -49,23 +57,16 @@ public sealed class MCH_ALT : MachinistRotation
 
     #region Properties
     private bool CountDownActive { get; set; } = false;
-    private bool InBurst { get; set; } = false;
+
     private bool StartOpener { get; set; } = false;
+    public bool OpenerInProgress { get; private set; }
     private bool OpenerHasFinished { get; set; } = false;
     private bool OpenerHasFinishedDummy { get; set; } = false;
     private bool OpenerAvailable { get; set; } = false;
     private int Openerstep { get; set; } = 0;
-
-    private bool IsSecond0GCD = false;
-    bool IsNailSmall { get; set; }
-    bool IsNailSmallLowHP { get; set; }
-    bool IsNailBig { get; set; }
-    bool IsTargetLahabrea { get; set; }
-    bool IsTargetMagitekBit { get; set; }
-    bool IsTargetTheUltimaWeapon { get; set; }
-    bool IsTargetJagdDoll { get; set; }
-    bool IsTargetJagdDollLowHP { get; set; }
-    public bool OpenerInProgress { get; private set; }
+    const float universalFailsafeThreshold = 5.0f;
+    private bool InBurst => Player.HasStatus(true, StatusID.Wildfire_1946);
+    private bool IsSecond0GCD => WeaponRemain >= 0.59f && WeaponRemain <= 0.80f && CustomRotationEx.GetCurrentAnimationLock() == 0;
     #endregion
 
     #region Countdown logic
@@ -137,12 +138,13 @@ public sealed class MCH_ALT : MachinistRotation
 
         bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
         bool inTrials = TerritoryContentType.Equals(TerritoryContentType.Trials);
+        bool lateWeave = WeaponRemain >= 0.59f && WeaponRemain <= 0.80f;
 
         if (/*(inRaids || inTrials) &&*/ CombatElapsedLessGCD(10))
         {
-            if (!CombatElapsedLessGCD(5) && IsSecond0GCD)
+            if (!CombatElapsedLessGCD(5) && lateWeave)
             {
-                if (WildfirePvE.CanUse(out act, true))
+                if (WildfirePvE.CanUse(out act))
                 {
                     return true;
                 }
@@ -190,7 +192,12 @@ public sealed class MCH_ALT : MachinistRotation
         }
 
         // Check for not burning Hypercharge below level 52 on AOE
+        bool lateWeave = WeaponRemain >= 0.59f && WeaponRemain <= 0.80f;
         bool LowLevelHyperCheck = !AutoCrossbowPvE.EnoughLevel && SpreadShotPvE.CanUse(out _);
+        //if (lateWeave && (IsLastAbility(false, HyperchargePvE) || Player.HasStatus(true, StatusID.Hypercharged)))
+        //{
+        //    return WildfirePvE.CanUse(out act);
+        //}
 
         // If Wildfire is active, use Hypercharge.....Period
         if (Player.HasStatus(true, StatusID.Wildfire_1946) && !nextGCD.IsTheSameTo(true, FullMetalFieldPvE)) // could be ruining things
@@ -205,12 +212,22 @@ public sealed class MCH_ALT : MachinistRotation
                 return true;
             }
 
-
-            if ((IsLastAbility(false, HyperchargePvE) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged))
-                && !CombatElapsedLess(10) && CanUseHyperchargePvE(out _) && !LowLevelHyperCheck && WildfirePvE.CanUse(out act))
+            if (lateWeave &&
+                ((IsLastAbility(false, HyperchargePvE) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)) &&
+                !CombatElapsedLess(10) &&
+                CanUseHyperchargePvE(out _) &&
+                !LowLevelHyperCheck &&
+                WildfirePvE.CanUse(out act)))
             {
                 return true;
             }
+
+            //bool lateWeave = WeaponRemain >= 0.59f && WeaponRemain <= 0.80f;
+            //if (((IsLastAbility(false, HyperchargePvE)) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged))
+            //    && !CombatElapsedLess(10) && CanUseHyperchargePvE(out _) && !LowLevelHyperCheck && WildfirePvE.CanUse(out act))
+            //{
+            //    return true;
+            //}
 
         }
         // Use Hypercharge if at least 12 seconds of combat and (if wildfire will not be up in 30 seconds or if you hit 100 heat)
@@ -383,31 +400,8 @@ public sealed class MCH_ALT : MachinistRotation
     #region Extra Methods
     protected override void UpdateInfo()
     {
-        IsInSecond0GCD();
         OpenerReady();
         OpenerStarter();
-        BurstChecker();
-    }
-
-    private void BurstChecker()
-    {
-        bool hasWildfire = Player.HasStatus(true, StatusID.Wildfire_1946);
-        InBurst = hasWildfire;
-    }
-
-    // 1946
-    private void IsInSecond0GCD()
-    {
-        float remainingGCD = DataBased.DefaultGCDRemain;
-
-        if (remainingGCD >= 0.6f && remainingGCD <= 1.2f)
-        {
-            IsSecond0GCD = true;
-        }
-        else
-        {
-            IsSecond0GCD = false;
-        }
     }
 
     // Logic for Hypercharge
@@ -482,6 +476,7 @@ public sealed class MCH_ALT : MachinistRotation
         if (OpenerHasFinished)
         {
             StartOpener = false;
+            Openerstep = 0;
             OpenerHasFinished = false;
         }
         if (StartOpener)
@@ -538,93 +533,337 @@ public sealed class MCH_ALT : MachinistRotation
 
     private bool Opener(out IAction? act)
     {
-        switch (Openerstep)
+        // Universal failsafe for opener inactivity
+        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && Openerstep > 0)
         {
-            case 0:
-                return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
+            act = null;
+            OpenerHasFinished = true;  // Stop the opener
+            return false;  // Stop further action
+        }
 
-            case 1:
-                return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+        switch (SelectedOpener)
+        {
+            case Openers.Default:
+                switch (Openerstep)
+                {
+                    case 0:
+                        return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
 
-            case 2:
-                return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 1:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            case 3:
-                return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+                    case 2:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            case 4:
-                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true));
+                    case 3:
+                        return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
 
-            case 5:
-                return OpenerController(IsLastGCD(false, ChainSawPvE), ChainSawPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 4:
+                        return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true));
 
-            case 6:
-                return OpenerController(IsLastGCD(true, ExcavatorPvE), ExcavatorPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 5:
+                        return OpenerController(IsLastGCD(false, ChainSawPvE), ChainSawPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            case 7:
-                return OpenerController(IsLastAbility(true, RookAutoturretPvE), RookAutoturretPvE.CanUse(out act, usedUp: true));
+                    case 6:
+                        return OpenerController(IsLastGCD(true, ExcavatorPvE), ExcavatorPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            case 8:
-                return OpenerController(IsLastAbility(false, ReassemblePvE), ReassemblePvE.CanUse(out act, usedUp: true));
+                    case 7:
+                        return OpenerController(IsLastAbility(true, RookAutoturretPvE), RookAutoturretPvE.CanUse(out act, usedUp: true));
 
-            case 9:
-                return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+                    case 8:
+                        return OpenerController(IsLastAbility(false, ReassemblePvE), ReassemblePvE.CanUse(out act, usedUp: true));
 
-            case 10:
-                return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 9:
+                        return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
 
-            case 11:
-                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act));
+                    case 10:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            case 12:
-                return OpenerController(IsLastGCD(true, FullMetalFieldPvE), FullMetalFieldPvE.CanUse(out act, skipAoeCheck: true));
+                    case 11:
+                        // Only proceed if WeaponRemain is between 0.6s and 0.8s
+                        if (WeaponRemain >= 0.59f && WeaponRemain <= 0.80f)
+                        {
+                            return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act));
+                        }
+                        else if (WeaponRemain > 0.80f)
+                        {
+                            // Hold this step until WeaponRemain is within the desired range
+                            act = null; // No action is performed, but the step is not advanced
+                            return true; // Keep checking the condition on subsequent calls
+                        }
+                        else
+                        {
+                            act = null;
+                            OpenerHasFinished = true;
+                            return false;
+                        }
 
-            case 13:
-                return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 12:
+                        return OpenerController(IsLastGCD(true, FullMetalFieldPvE), FullMetalFieldPvE.CanUse(out act, skipAoeCheck: true));
 
-            case 14:
-                return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+                    case 13:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            //case 15:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 4, HeatBlastPvE.CanUse(out act, usedUp: true));
+                    case 14:
+                        return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
 
-            //case 16:
-            //    return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 15:
+                        OpenerHasFinished = true;
+                        Openerstep = 0;
+                        break;
+                }
+                break;
 
-            //case 17:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 3, HeatBlastPvE.CanUse(out act, usedUp: true));
+            case Openers.Alternative:
+                switch (Openerstep)
+                {
+                    case 0:
+                        return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
 
-            //case 18:
-            //    return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 1:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            //case 19:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 2, HeatBlastPvE.CanUse(out act, usedUp: true));
+                    case 2:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            //case 20:
-            //    return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 3:
+                        return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
 
-            //case 21:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 1, HeatBlastPvE.CanUse(out act, usedUp: true));
+                    case 4:
+                        return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true));
 
-            //case 22:
-            //    return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 5:
+                        return OpenerController(IsLastGCD(false, ChainSawPvE), ChainSawPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            //case 23:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 0, HeatBlastPvE.CanUse(out act, usedUp: true));
+                    case 6:
+                        return OpenerController(IsLastAbility(false, ReassemblePvE), ReassemblePvE.CanUse(out act, usedUp: true));
 
-            //case 24:
-            //    return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                    case 7:
+                        return OpenerController(IsLastGCD(true, ExcavatorPvE), ExcavatorPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
 
-            //case 25:
-            //    return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+                    case 8:
+                        return OpenerController(IsLastAbility(true, RookAutoturretPvE), RookAutoturretPvE.CanUse(out act, usedUp: true));
 
-            case 15:
-                OpenerHasFinished = true;
-                Openerstep = 0;
+                    case 9:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 10:
+                        return OpenerController(IsLastGCD(true, FullMetalFieldPvE), FullMetalFieldPvE.CanUse(out act, skipAoeCheck: true));
+
+                    case 11:
+                        return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+
+                    case 12:
+                        // Only proceed if WeaponRemain is between 0.6s and 0.8s
+                        if (WeaponRemain >= 0.59f && WeaponRemain <= 0.80f)
+                        {
+                            return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act));
+                        }
+                        else if (WeaponRemain > 0.80f)
+                        {
+                            // Hold this step until WeaponRemain is within the desired range
+                            act = null; // No action is performed, but the step is not advanced
+                            return true; // Keep checking the condition on subsequent calls
+                        }
+                        else
+                        {
+                            act = null;
+                            OpenerHasFinished = true;
+                            return false;
+                        }
+
+                    //case 12:
+                    //    return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act/*, isLastAbility: true*/) && WeaponRemain >= 0.6 && WeaponRemain <= 1);
+
+                    case 13:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 4, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 14:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 15:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 3, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 16:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 17:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 2, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 18:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 19:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 1, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 20:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 21:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 0, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 22:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 23:
+                        return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+
+                    case 24:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 25:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 26:
+                        return OpenerController(IsLastAction(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+
+                    case 27:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 28:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 29:
+                        return OpenerController(IsLastGCD(true, SplitShotPvE), SplitShotPvE.CanUse(out act));
+
+                    case 30:
+                        return OpenerController(IsLastGCD(true, SlugShotPvE), SlugShotPvE.CanUse(out act));
+
+                    case 31:
+                        return OpenerController(IsLastGCD(true, CleanShotPvE), CleanShotPvE.CanUse(out act));
+
+                    case 32:
+                        OpenerHasFinished = true;
+                        Openerstep = 0;
+                        break;
+                }
+                break;
+
+            case Openers.Beta:
+                switch (Openerstep)
+                {
+                    case 0:
+                        return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
+
+                    case 1:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 2:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 3:
+                        return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+
+                    case 4:
+                        return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true));
+
+                    case 5:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 6:
+                        return OpenerController(IsLastGCD(false, ChainSawPvE), ChainSawPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 7:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 8:
+                        return OpenerController(IsLastAbility(false, ReassemblePvE), ReassemblePvE.CanUse(out act, usedUp: true));
+
+                    case 9:
+                        return OpenerController(IsLastGCD(true, ExcavatorPvE), ExcavatorPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 10:
+                        return OpenerController(IsLastAbility(true, RookAutoturretPvE), RookAutoturretPvE.CanUse(out act, usedUp: true));
+
+                    case 11:
+                        // Only proceed if WeaponRemain is between 0.6s and 0.8s
+                        if (WeaponRemain >= 0.59f && WeaponRemain <= 0.80f)
+                        {
+                            return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act));
+                        }
+                        else if (WeaponRemain > 0.80f)
+                        {
+                            // Hold this step until WeaponRemain is within the desired range
+                            act = null; // No action is performed, but the step is not advanced
+                            return true; // Keep checking the condition on subsequent calls
+                        }
+                        else
+                        {
+                            act = null;
+                            OpenerHasFinished = true;
+                            return false;
+                        }
+
+                    case 12:
+                        return OpenerController(IsLastGCD(true, FullMetalFieldPvE), FullMetalFieldPvE.CanUse(out act, skipAoeCheck: true));
+
+                    case 13:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 14:
+                        return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
+
+                    case 15:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 4, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 16:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 17:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 3, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 18:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 19:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 2, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 20:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 21:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 1, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 22:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 23:
+                        return OpenerController(IsLastGCD(true, HeatBlastPvE) && OverheatedStacks == 0, HeatBlastPvE.CanUse(out act, usedUp: true));
+
+                    case 24:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 25:
+                        return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+
+                    case 26:
+                        return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 27:
+                        return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+
+                    case 28:
+                        return OpenerController(IsLastAction(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
+
+                    case 29:
+                        return OpenerController(IsLastGCD(true, SplitShotPvE), SplitShotPvE.CanUse(out act));
+
+                    case 30:
+                        return OpenerController(IsLastGCD(true, SlugShotPvE), SlugShotPvE.CanUse(out act));
+
+                    case 31:
+                        return OpenerController(IsLastGCD(true, CleanShotPvE), CleanShotPvE.CanUse(out act));
+
+                    case 32:
+                        OpenerHasFinished = true;
+                        Openerstep = 0;
+                        break;
+                }
                 break;
         }
+
         act = null;
-        return OpenerHasFinishedDummy = false;
+        return false;
     }
 
     private bool ShouldUseBurstMedicine(out IAction? act)
@@ -661,15 +900,38 @@ public sealed class MCH_ALT : MachinistRotation
         ImGui.TextDisabled(Description);
         DisplayStatusHelper.DisplayGCDStatus();
         //var gameobjectID = DataBase.DisplayPlayerGameObjectId();
+
+        ImGui.BeginGroup();
         if (ImGui.Button(nameof(ActionID.PelotonPvE)))
         {
             ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action, (uint)ActionID.PelotonPvE);
         }
-        DisplayStatusHelper.EndPaddedChild();
+        if (ImGui.Button("Reset Opener values"))
+        {
+            StartOpener = false;
+            OpenerInProgress = false;
+            OpenerHasFinished = false;
+            Openerstep = 0;
+        }
+        ImGui.EndGroup();
+
+        ImGui.BeginGroup();
+        ImGui.Text("SelectedOpener: " + SelectedOpener.ToString());
         ImGui.Text("OpenerAvailable: " + OpenerAvailable.ToString());
         ImGui.Text("StartOpener: " + StartOpener.ToString());
         ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
         ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
         ImGui.Text("Openerstep: " + Openerstep.ToString());
+        ImGui.EndGroup();
+
+        if (InCombat)
+        {
+            float time = (float)TimeSinceLastAction.TotalSeconds;  // Assuming TimeSinceLastAction is in seconds
+            int minutes = (int)(time / 60);    // Extract minutes
+            float seconds = time % 60;         // Extract remaining seconds
+            ImGui.Text($"TimeSinceLastAction: {minutes:00}:{seconds:00.00}");
+        }
+
+        DisplayStatusHelper.EndPaddedChild();
     }
 }
