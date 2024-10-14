@@ -83,20 +83,4 @@ internal class ActionManagerHelper
     {
         return ActionManager.Instance();
     }
-
-    /*
-
-    if (!IsRealGCD)
-    {
-        if (option.HasFlag(CanUseOption.OnLastAbility))
-        {
-            if (DataCenter.NextAbilityToNextGCD > AnimationLockTime + DataCenter.Ping + DataCenter.MinAnimationLock) return false;
-        }
-        else if (!option.HasFlag(CanUseOption.IgnoreClippingCheck))
-        {
-            if (DataCenter.NextAbilityToNextGCD < AnimationLockTime) return false;
-        }
-    }
-
-    */
 }

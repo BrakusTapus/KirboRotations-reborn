@@ -646,11 +646,8 @@ public sealed class MCH_TEA : MachinistRotation
         ImGui.Spacing();
 
         ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
-        ImGui.Text("DefaultGCDRemain" + DataBased.DefaultGCDRemain.ToString());
+        ImGui.Text("DefaultGCDRemain" + CustomRotationEx.DefaultGCDRemain.ToString());
         ImGui.Text("Openerstep: " + Openerstep.ToString());
-
-
-
 
         DisplayStatusHelper.EndPaddedChild();
     }
