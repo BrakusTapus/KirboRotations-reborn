@@ -326,33 +326,30 @@ public sealed class MCH_UWU_NEW : MachinistRotation
             return true;
         }
 
-        //bool experimentalFeatureNoGCDsBeyondThisPoint = ExperimentalFeature && IsOverheated;
-        //if (experimentalFeatureNoGCDsBeyondThisPoint) return false;
-
         // Check if Drill can be used
-        if (DrillPvE.EnoughLevel && DrillPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+        if (DrillPvE.EnoughLevel && DrillPvE.CanUse(out act, usedUp: true) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
         {
             return true;
         }
 
         // Check if SpreadShot cannot be used
-        if ((!SpreadShotPvE.CanUse(out _) || SpreadShotPvE.CanUse(out _)) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
-        {
+        //if ((!SpreadShotPvE.CanUse(out _) || SpreadShotPvE.CanUse(out _)) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+        //{
             // Check if Drill can be used
-            if (DrillPvE.EnoughLevel && DrillPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
-            {
-                return true;
-            }
-            if (AirAnchorPvE.EnoughLevel && AirAnchorPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
-            {
-                return true;
-            }
+            //if (DrillPvE.EnoughLevel && DrillPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+            //{
+            //    return true;
+            //}
+            //if (AirAnchorPvE.EnoughLevel && AirAnchorPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+            //{
+            //    return true;
+            //}
 
-            if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
+            if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act, usedUp: true) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit)
             {
                 return true;
             }
-        }
+        //}
 
         if (SpreadShotPvE.CanUse(out act) && !isTargetPlayer && !isTargetNail && !isTargetLahabrea && !isTargetMagitekBit && !isTargetIfrit)
         {
@@ -522,14 +519,3 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         ImGui.Text("Openerstep: " + Openerstep.ToString());
     }
 }
-
-/*
-    bool IsNailSmall { get; set; }
-    bool IsNailSmallLowHP { get; set; }
-    bool IsNailBig { get; set; }
-    bool IsTargetLahabrea { get; set; }
-    bool IsTargetMagitekBit { get; set; }
-    bool IsTargetTheUltimaWeapon { get; set; }
-    bool IsTargetJagdDoll { get; set; }
-    bool IsTargetJagdDollLowHP { get; set; }
-*/

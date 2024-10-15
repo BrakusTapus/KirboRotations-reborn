@@ -17,42 +17,6 @@ internal unsafe class CustomRotationEx
     internal GameObject* GetGameObject = targetSystem->GetTargetObject();
     internal ObjectKind ObjectKind = targetSystem->GetTargetObject()->GetObjectKind();
 
-    /*
-    //
-    private static TargetSystem* targetSystem;
-    internal static TargetSystem* targetSystem
-    {
-        get
-        {
-            if (instanceActionManager == null)
-            {
-                instanceActionManager = GetActionManagerInstance();
-                if (instanceActionManager == null)
-                {
-                    throw new Exception("Could not create an instanceActionManager of the ActionManager.");
-                }
-            }
-
-            return instanceActionManager;
-        }
-    }
-    private static unsafe ActionManager* GetActionManagerInstance()
-    {
-        var pInstance = ActionManager.Instance();
-
-        if (pInstance == null)
-        {
-            Serilog.Log.Logger.Warning($"ThrowHelper.ThrowNullAddress(\"ActionManager.InstanceActionManager\", \"48 8D 0D ?? ?? ?? ?? F3 0F 10 13\")");;
-            return null;
-        }
-
-        return pInstance;
-    }
-    
-
-
-
-    */
     private static ActionManager* instanceActionManager;
     internal static ActionManager* InstanceActionManager
     {
@@ -82,11 +46,6 @@ internal unsafe class CustomRotationEx
 
         return pInstance;
     }
-
-
-
-
-
 
     internal GameMain* gameMain = GameMain.Instance();
 
@@ -192,12 +151,6 @@ internal unsafe class CustomRotationEx
     #endregion
 
     #region GCD
-
-    /// <summary>
-    /// Is a GCD action.
-    /// </summary>
-    bool IsRealGCD { get; }
-
     internal static float AnimationLockTime => GetCurrentAnimationLock();
 
     internal static unsafe float GetCurrentAnimationLock()
@@ -451,5 +404,5 @@ internal unsafe class CustomRotationEx
             return ActionManager.Instance()->UseAction(ActionType.Action, (uint)actionID, targetObjectId);
         }
     }
-    //         var gamePath = args.Length >= 1 ? args[0] : @"E:\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\"; 
+
 }

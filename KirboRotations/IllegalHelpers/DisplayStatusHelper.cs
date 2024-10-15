@@ -48,7 +48,7 @@ internal static class DisplayStatusHelper
         ImGui.PushStyleColor(ImGuiCol.PlotHistogram, Dalamud.Interface.Colors.ImGuiColors.ParsedGold);
         BeginBorderedGroup();
         float boxXStart = ImGui.GetCursorPosX();
-        ImGui.Text("GCD Total: " + DataBased.DefaultGCDTotal.ToString("F2") + "s" + "\\" + DataBased.DefaultGCDRemain.ToString("F2") + "s");
+        ImGui.Text("GCD Total: " + CustomRotationEx.DefaultGCDTotal.ToString("F2") + "s" + "\\" + CustomRotationEx.DefaultGCDRemain.ToString("F2") + "s");
         ImGui.SameLine();
         float textsize = ImGui.CalcTextSize("Animation Lock Delay: " + ActionManagerHelper.GetCurrentAnimationLock().ToString("F2")).X;
         ImGui.SetCursorPosX(ImGui.GetWindowContentRegionMax().X - textsize - ImGui.GetStyle().ItemSpacing.X);
@@ -62,13 +62,13 @@ internal static class DisplayStatusHelper
 
         // NextAbilityToNextGCD
 
-        ImGui.Text("GCD Remain: " + DataBased.DefaultGCDRemain.ToString("F2"));
+        ImGui.Text("GCD Remain: " + CustomRotationEx.DefaultGCDRemain.ToString("F2"));
         ImGui.SameLine();
         float textsize2 = ImGui.CalcTextSize("NextAbilityToNextGCD: " + CustomRotation.NextAbilityToNextGCD.ToString("F2")).X;
         ImGui.SetCursorPosX(ImGui.GetWindowContentRegionMax().X - textsize2 - ImGui.GetStyle().ItemSpacing.X);
         ImGui.Text("NextAbilityToNextGCD: " + CustomRotation.NextAbilityToNextGCD.ToString("F2"));
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + padding);
-        ImGui.ProgressBar(DataBased.DefaultGCDRemain / DataBased.DefaultGCDTotal, progressBarSize, "");
+        ImGui.ProgressBar(CustomRotationEx.DefaultGCDRemain / CustomRotationEx.DefaultGCDTotal, progressBarSize, "");
 
         // Add some padding between the progress bars
         ImGui.Dummy(new Vector2(0, padding));
