@@ -2,6 +2,7 @@
 
 namespace KirboRotations.UltimateRotations.Magical;
 
+[BetaRotation]
 [Rotation("SMN TEA", CombatType.PvE, GameVersion = "7.05")]
 [Api(4)]
 public sealed class SMN_TEA : SummonerRotation

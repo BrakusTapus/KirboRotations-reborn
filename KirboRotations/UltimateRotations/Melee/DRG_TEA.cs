@@ -1,5 +1,6 @@
 namespace KirboRotations.UltimateRotations.Melee;
 
+[BetaRotation]
 [Rotation("DRG TEA", CombatType.PvE, GameVersion = "7.05")]
 [Api(4)]
 
