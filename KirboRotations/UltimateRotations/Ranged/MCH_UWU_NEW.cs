@@ -85,9 +85,6 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         bool isNailBig = Target.Name.ToString() == "Infernal Nail" && Target.HasStatus(false, StatusID.VulnerabilityDown_1545);
         bool isTargetLahabrea = Target.Name.ToString() == "Lahabrea" && IsInUwU;
         bool isTargetMagitekBit = Target.Name.ToString() == "Magitek Bit" && IsInUwU;
-        bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
-        bool inTrials = TerritoryContentType.Equals(TerritoryContentType.Trials);
-        bool hasTinctureBuff = Player.HasStatus(true, StatusID.Medicated);
         string playerName = Player.Name.ToString();
         bool isTargetNail = Target.Name.ToString() == "Infernal Nail";
         bool isTargetIfrit = Target.Name.ToString() == "Ifrit";
@@ -113,56 +110,17 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         // Check next GCD action and conditions for Reassemble.
         bool isReassembleUsable = nextGCD.IsTheSameTo(false, DrillPvE) || nextGCD.IsTheSameTo(ActionID.DrillPvE);
 
-        //// Keeps Ricochet and Gauss cannon Even
-        //bool isRicochetMore = RicochetPvE.EnoughLevel && GaussRoundPvE.Cooldown.CurrentCharges <= RicochetPvE.Cooldown.CurrentCharges;
-        //bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
-
         // Use Barrel Stabilizer on CD if won't cap
         if (BarrelStabilizerPvE.CanUse(out act) && Target != Player && Target.GetHealthRatio() >= 0.25f)
         {
             return true;
         }
 
-        //if (CombatElapsedLessGCD(10))
-        //{
-        //if (WildfirePvE.CanUse(out act, true) &&
-        //    (HeatStacks == 5 ||
-        //    (nextGCD.IsTheSameTo(true, HotShotPvE) &&
-        //    (Player.HasStatus(true, StatusID.Hypercharged) || Heat >= 50))))
-        //{
-        //    return true;
-        //}
-
-        //if (CombatElapsedLessGCD(5))
-        //{
-
-        //    if (BarrelStabilizerPvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-        //    if (WildfirePvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-        //    if (HyperchargePvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-        //}
-
-        //if (WildfirePvE.CanUse(out act, true) &&
-        //    (HeatStacks == 5 ||
-        //    (nextGCD.IsTheSameTo(true, DrillPvE) &&
-        //    (Player.HasStatus(true, StatusID.Hypercharged) || Heat >= 50))))
-        //{
-        //    return true;
-        //}
-
         if (Battery >= 50 && RookAutoturretPvE.CanUse(out act))
         {
             return true;
         }
-        //}
+
 
         // Attempt to use Reassemble if it's ready
         if (isReassembleUsable)
@@ -202,15 +160,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         }
 
         act = null;
-        bool isNailSmall = Target.Name.ToString() == "Infernal Nail" && !Target.HasStatus(false, StatusID.VulnerabilityDown_1545);
-        bool isNailSmallLowHP = Target.Name.ToString() == "Infernal Nail" && !Target.HasStatus(false, StatusID.VulnerabilityDown_1545) && Target.CurrentHp < 13435 && IsInUwU;
-        bool isNailBig = Target.Name.ToString() == "Infernal Nail" && Target.HasStatus(false, StatusID.VulnerabilityDown_1545);
-        bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
-        bool inTrials = TerritoryContentType.Equals(TerritoryContentType.Trials);
-        bool hasTinctureBuff = Player.HasStatus(true, StatusID.Medicated);
-
         string playerName = Player.Name.ToString();
-
         bool isTargetNail = Target.Name.ToString() == "Infernal Nail";
         bool isTargetIfrit = Target.Name.ToString() == "Ifrit";
         bool isTargetGaruda = Target.Name.ToString() == "Garuda";
@@ -252,11 +202,6 @@ public sealed class MCH_UWU_NEW : MachinistRotation
                 return true;
             }
         }
-        // Rook Autoturret/Queen Logic
-        //if (!IsLastGCD(true, HeatBlastPvE, BlazingShotPvE) && CanUseQueenMeow(out act))
-        //{
-        //    return true;
-        //}
 
         if (nextGCD.IsTheSameTo(true, CleanShotPvE, HotShotPvE) && Battery == 100 && Target.GetHealthRatio() >= 0.25)
         {
@@ -283,7 +228,6 @@ public sealed class MCH_UWU_NEW : MachinistRotation
             if (GaussRoundPvE.CanUse(out act, usedUp: true))
                 return true;
         }
-
 
         return base.AttackAbility(nextGCD, out act);
     }

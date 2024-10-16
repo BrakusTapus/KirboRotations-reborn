@@ -10,25 +10,15 @@ namespace KirboRotations.UltimateRotations.Ranged;
 [BetaRotation]
 [Rotation("MCH TEA",
     CombatType.PvE,
-    GameVersion = $"v.\notation： v...0\n\n",
-    Description = $"┏━━━━━━━━┓\n" +
-                   "┃       v...0     ┃\n" +
-                   "┃                 ┃\n" +
-                   "┗∩━━━━━━∩┛\n" +
-                   "        \\ (´･ω･｀) ﾉ")]
+    GameVersion = $"v.\notation： v...1\n\n",
+    Description = $"")]
 [SourceCode(Path = "")]
 [Api(4)]
 public sealed class MCH_TEA : MachinistRotation
 {
     #region Config Options
-    [RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
-    public bool SkipQueenLogic { get; set; } = true;
-
-    [RotationConfig(CombatType.PvE, Name = "Enable experimental features.")]
-    public bool ExperimentalFeature { get; set; } = false;
-
-    [RotationConfig(CombatType.PvE, Name = "Turn on if rotation becomes unstable.")]
-    public bool TestDisablePointlessCode { get; set; } = false;
+    //[RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
+    //public bool SkipQueenLogic { get; set; } = true;
 
     private byte HeatStacks
     {
@@ -39,12 +29,12 @@ public sealed class MCH_TEA : MachinistRotation
         }
     }
 
-    private bool StartOpener { get; set; } = false;
-    private bool OpenerHasFinished { get; set; } = false;
     private bool OpenerHasFinishedDummy { get; set; } = false;
-    private bool OpenerAvailable { get; set; } = false;
+    private bool OpenerHasFinished { get; set; } = false;
     private int Openerstep { get; set; } = 0;
+    private bool OpenerAvailable { get; set; } = false;
     public bool OpenerInProgress { get; private set; }
+    private bool StartOpener { get; set; } = false;
 
     private bool InBurst => Player.HasStatus(true, StatusID.Wildfire_1946);
     private bool IsSecond0GCD => WeaponRemain >= 0.59f && WeaponRemain <= 0.80f && CustomRotationEx.GetCurrentAnimationLock() == 0;
@@ -93,39 +83,28 @@ public sealed class MCH_TEA : MachinistRotation
         // Check next GCD action and conditions for Reassemble.
         bool isReassembleUsable = nextGCD.IsTheSameTo(false, DrillPvE) || nextGCD.IsTheSameTo(ActionID.DrillPvE) || nextGCD.IsTheSameTo(ActionID.AirAnchorPvE);
 
-        // Keeps Ricochet and Gauss cannon Even
-        bool isRicochetMore = RicochetPvE.EnoughLevel && GaussRoundPvE.Cooldown.CurrentCharges <= RicochetPvE.Cooldown.CurrentCharges;
-        bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
-
-        bool inRaids = TerritoryContentType.Equals(TerritoryContentType.Raids);
-        bool inTrials = TerritoryContentType.Equals(TerritoryContentType.Trials);
-
-        if (/*(inRaids || inTrials) &&*/ CombatElapsedLessGCD(10))
+        // Use Barrel Stabilizer on CD if won't cap
+        if (BarrelStabilizerPvE.CanUse(out act) && Target != Player && Target.GetHealthRatio() >= 0.25f)
         {
-            if (!CombatElapsedLessGCD(5) && IsSecond0GCD)
-            {
-                if (WildfirePvE.CanUse(out act, true))
-                {
-                    return true;
-                }
-            }
-
-            if (IsLastGCD(ActionID.DrillPvE) && BarrelStabilizerPvE.CanUse(out act))
-            {
-                return true;
-            }
-
-            if (Battery >= 50 && IsLastGCD(ActionID.ExcavatorPvE, ActionID.ChainSawPvE) && AutomatonQueenPvE.CanUse(out act, false, true, true, true))
-            {
-                return true;
-            }
+            return true;
         }
+
+        bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
+        if (Battery >= 50 && RookAutoturretPvE.CanUse(out act) && !isJagdDoll)
+        {
+            return true;
+        }
+
 
         // Attempt to use Reassemble if it's ready
         if (isReassembleUsable)
         {
             if (ReassemblePvE.CanUse(out act, skipComboCheck: true, usedUp: true)) return true;
         }
+
+        // Keeps Ricochet and Gauss cannon Even
+        bool isRicochetMore = RicochetPvE.EnoughLevel && GaussRoundPvE.Cooldown.CurrentCharges <= RicochetPvE.Cooldown.CurrentCharges;
+        bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
 
         // Use Ricochet
         if (isRicochetMore && (!IsLastAction(true, GaussRoundPvE, RicochetPvE) && IsLastGCD(true, HeatBlastPvE, AutoCrossbowPvE) || !IsLastGCD(true, HeatBlastPvE, AutoCrossbowPvE)))
@@ -153,78 +132,64 @@ public sealed class MCH_TEA : MachinistRotation
 
         act = null;
         bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
-        if (isJagdDollAndLowHP)
+        bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
+
+        if (isJagdDoll || isJagdDollAndLowHP)
         {
             return false;
         }
-
-        // Check for not burning Hypercharge below level 52 on AOE
-        bool LowLevelHyperCheck = !AutoCrossbowPvE.EnoughLevel && SpreadShotPvE.CanUse(out _);
 
         // If Wildfire is active, use Hypercharge.....Period
         if (Player.HasStatus(true, StatusID.Wildfire_1946))
         {
             return HyperchargePvE.CanUse(out act);
         }
-        // Burst
+
+        // Burst setting in RSR
         if (IsBurst)
         {
-            if (UseBurstMedicine(out act))
-            {
-                return true;
-            }
-
-
             if ((IsLastAbility(false, HyperchargePvE) || Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged))
-                && !CombatElapsedLess(10) && CanUseHyperchargePvE(out _) && !LowLevelHyperCheck && WildfirePvE.CanUse(out act))
+                && CanUseHyperchargePvE(out _) && WildfirePvE.CanUse(out act))
             {
                 return true;
             }
 
         }
         // Use Hypercharge if at least 12 seconds of combat and (if wildfire will not be up in 30 seconds or if you hit 100 heat)
-        if (!LowLevelHyperCheck && !CombatElapsedLess(12) && !Player.HasStatus(true, StatusID.Reassembled) && (!WildfirePvE.Cooldown.WillHaveOneCharge(30) || Heat == 100))
+        if (!Player.HasStatus(true, StatusID.Reassembled) && (!WildfirePvE.Cooldown.WillHaveOneCharge(30) || Heat == 100))
         {
             if (CanUseHyperchargePvE(out act))
             {
                 return true;
             }
         }
-        bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
-        if (isJagdDoll && IsInTEA)
+
+
+        if (nextGCD.IsTheSameTo(true, CleanShotPvE, HotShotPvE) && Battery == 100 && Target.GetHealthRatio() >= 0.25)
         {
-            return false;
+            if (RookAutoturretPvE.CanUse(out act))
+            {
+                return true;
+            }
         }
 
+        // Keeps Ricochet and Gauss cannon Even
+        bool isRicochetMore = RicochetPvE.EnoughLevel && GaussRoundPvE.Cooldown.CurrentCharges <= RicochetPvE.Cooldown.CurrentCharges;
+        bool isGaussMore = !RicochetPvE.EnoughLevel || GaussRoundPvE.Cooldown.CurrentCharges > RicochetPvE.Cooldown.CurrentCharges;
 
-        //// Rook Autoturret/Queen Logic
-        //if (!IsLastGCD(true, HeatBlastPvE, BlazingShotPvE) && CanUseQueenMeow(out act))
-        //{
-        //    return true;
-        //}
-
-
-        //if (nextGCD.IsTheSameTo(true, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery >= 90)
-        //{
-        //    if (RookAutoturretPvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-        //}
-
-        //if (nextGCD.IsTheSameTo(true, CleanShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery == 100)
-        //{
-        //    if (RookAutoturretPvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-        //}
-        // Use Barrel Stabilizer on CD if won't cap
-        if (BarrelStabilizerPvE.CanUse(out act))
+        // Use Ricochet
+        if (isRicochetMore && (!IsLastAction(true, GaussRoundPvE, RicochetPvE) && IsLastGCD(true, HeatBlastPvE, AutoCrossbowPvE) || !IsLastGCD(true, HeatBlastPvE, AutoCrossbowPvE)))
         {
-            return true;
+            if (RicochetPvE.CanUse(out act, skipAoeCheck: true, usedUp: true))
+                return true;
         }
 
+        // Use Gauss
+        if (isGaussMore && (!IsLastAction(true, GaussRoundPvE, RicochetPvE) && IsLastGCD(true, HeatBlastPvE, AutoCrossbowPvE) || !IsLastGCD(true, HeatBlastPvE, AutoCrossbowPvE)))
+        {
+            if (GaussRoundPvE.CanUse(out act, usedUp: true))
+                return true;
+        }
         return base.AttackAbility(nextGCD, out act);
     }
     #endregion
@@ -244,12 +209,6 @@ public sealed class MCH_TEA : MachinistRotation
             return false;
         }
 
-        // Checks and executes AutoCrossbow or HeatBlast if conditions are met (overheated state).
-        if (TestDisablePointlessCode && AutoCrossbowPvE.CanUse(out act))
-        {
-            return true;
-        }
-
         if (HeatBlastPvE.CanUse(out act, skipComboCheck: true))
         {
             return true;
@@ -257,12 +216,6 @@ public sealed class MCH_TEA : MachinistRotation
 
         // Check if AirAnchor can be used
         if (AirAnchorPvE.CanUse(out act))
-        {
-            return true;
-        }
-
-        // If not at the required level for AirAnchor and HotShot can be used
-        if (!AirAnchorPvE.EnoughLevel && HotShotPvE.CanUse(out act))
         {
             return true;
         }
