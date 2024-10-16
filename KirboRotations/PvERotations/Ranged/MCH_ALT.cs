@@ -42,8 +42,8 @@ public sealed class MCH_ALT : MachinistRotation
     [RotationConfig(CombatType.PvE, Name = "Opener")]
     public Openers SelectedOpener { get; set; } = Openers.Default;
 
-    [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
-    public bool UseAuto2ndTincture { get; set; } = false;
+    //[RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
+    //public bool UseAuto2ndTincture { get; set; } = false;
 
     [RotationConfig(CombatType.PvE, Name = "Enable UwU Checker.")]
     public bool EnableUwUChecker { get; set; } = false;
@@ -155,7 +155,7 @@ public sealed class MCH_ALT : MachinistRotation
                 return true;
             }
 
-            if (Battery >= 50 && IsLastGCD(ActionID.ExcavatorPvE, ActionID.ChainSawPvE) && AutomatonQueenPvE.CanUse(out act, false, true, true, true))
+            if (Battery >= 50 && IsLastGCD(ActionID.ExcavatorPvE, ActionID.ChainSawPvE) && RookAutoturretPvE.CanUse(out act, false, true, true, true))
             {
                 return true;
             }
@@ -244,7 +244,9 @@ public sealed class MCH_ALT : MachinistRotation
             return true;
         }
 
-        if (nextGCD.IsTheSameTo(true, CleanShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery == 100)
+        if ((nextGCD.IsTheSameTo(true, CleanShotPvE) && Battery == 100) ||
+            (nextGCD.IsTheSameTo(true, HotShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery >= 90) ||
+            InBurst)
         {
             if (RookAutoturretPvE.CanUse(out act))
             {

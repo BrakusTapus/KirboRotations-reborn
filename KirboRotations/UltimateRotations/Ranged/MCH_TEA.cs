@@ -24,9 +24,6 @@ public sealed class MCH_TEA : MachinistRotation
     [RotationConfig(CombatType.PvE, Name = "Skip Queen Logic and uses Rook Autoturret/Automaton Queen immediately whenever you get 50 battery")]
     public bool SkipQueenLogic { get; set; } = true;
 
-    [RotationConfig(CombatType.PvE, Name = "Automatic 2nd tincture")]
-    public bool UseAuto2ndTincture { get; set; } = false;
-
     [RotationConfig(CombatType.PvE, Name = "Enable experimental features.")]
     public bool ExperimentalFeature { get; set; } = false;
 
@@ -64,10 +61,11 @@ public sealed class MCH_TEA : MachinistRotation
                 return act;
             }
         }
-        if (remainTime < 1.5f)
+        if (remainTime < 0.4f)
         {
-            if (UseBurstMedicine(out var act))
+            if (AirAnchorPvE.CanUse(out var act))
             {
+                StartOpener = true;
                 return act;
             }
         }
@@ -79,6 +77,11 @@ public sealed class MCH_TEA : MachinistRotation
     // Determines emergency actions to take based on the next planned GCD action.
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
+        if (OpenerInProgress)
+        {
+            return Opener(out act);
+        }
+
         act = null;
         bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
         if (isJagdDollAndLowHP)
@@ -88,14 +91,7 @@ public sealed class MCH_TEA : MachinistRotation
 
         // Reassemble Logic
         // Check next GCD action and conditions for Reassemble.
-        bool isReassembleUsable =
-            //Reassemble current # of charges and double proc protection
-            ReassemblePvE.Cooldown.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Reassembled) &&
-            (nextGCD.IsTheSameTo(true, [ChainSawPvE, ExcavatorPvE, AirAnchorPvE, DrillPvE]) ||
-            !ChainSawPvE.EnoughLevel && nextGCD.IsTheSameTo(true, DrillPvE) ||
-            !DrillPvE.EnoughLevel && nextGCD.IsTheSameTo(true, CleanShotPvE) ||
-            //HotShot Logic
-            !CleanShotPvE.EnoughLevel && nextGCD.IsTheSameTo(true, HotShotPvE));
+        bool isReassembleUsable = nextGCD.IsTheSameTo(false, DrillPvE) || nextGCD.IsTheSameTo(ActionID.DrillPvE) || nextGCD.IsTheSameTo(ActionID.AirAnchorPvE);
 
         // Keeps Ricochet and Gauss cannon Even
         bool isRicochetMore = RicochetPvE.EnoughLevel && GaussRoundPvE.Cooldown.CurrentCharges <= RicochetPvE.Cooldown.CurrentCharges;
@@ -150,6 +146,11 @@ public sealed class MCH_TEA : MachinistRotation
     // Logic for using attack abilities outside of GCD, focusing on burst windows and cooldown management.
     protected override bool AttackAbility(IAction nextGCD, out IAction? act)
     {
+        if (OpenerInProgress)
+        {
+            return Opener(out act);
+        }
+
         act = null;
         bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
         if (isJagdDollAndLowHP)
@@ -189,33 +190,35 @@ public sealed class MCH_TEA : MachinistRotation
                 return true;
             }
         }
-        // Rook Autoturret/Queen Logic
-        if (!IsLastGCD(true, HeatBlastPvE, BlazingShotPvE) && CanUseQueenMeow(out act))
-        {
-            return true;
-        }
-
         bool isJagdDoll = Target.Name.ToString() == "Jagd Doll";
         if (isJagdDoll && IsInTEA)
         {
             return false;
         }
 
-        if (nextGCD.IsTheSameTo(true, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery >= 90)
-        {
-            if (RookAutoturretPvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
 
-        if (nextGCD.IsTheSameTo(true, CleanShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery == 100)
-        {
-            if (RookAutoturretPvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
+        //// Rook Autoturret/Queen Logic
+        //if (!IsLastGCD(true, HeatBlastPvE, BlazingShotPvE) && CanUseQueenMeow(out act))
+        //{
+        //    return true;
+        //}
+
+
+        //if (nextGCD.IsTheSameTo(true, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery >= 90)
+        //{
+        //    if (RookAutoturretPvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
+        //}
+
+        //if (nextGCD.IsTheSameTo(true, CleanShotPvE, AirAnchorPvE, ChainSawPvE, ExcavatorPvE) && Battery == 100)
+        //{
+        //    if (RookAutoturretPvE.CanUse(out act))
+        //    {
+        //        return true;
+        //    }
+        //}
         // Use Barrel Stabilizer on CD if won't cap
         if (BarrelStabilizerPvE.CanUse(out act))
         {
@@ -230,6 +233,10 @@ public sealed class MCH_TEA : MachinistRotation
     // Defines the general logic for determining which global cooldown (GCD) action to take.
     protected override bool GeneralGCD(out IAction? act)
     {
+        if (OpenerInProgress)
+        {
+            return Opener(out act);
+        }
         act = null;
         bool isJagdDollAndLowHP = Target.Name.ToString() == "Jagd Doll" && Target.GetHealthRatio() < 0.25;
         if (isJagdDollAndLowHP)
@@ -248,18 +255,6 @@ public sealed class MCH_TEA : MachinistRotation
             return true;
         }
 
-        bool experimentalFeatureNoGCDsBeyondThisPoint = ExperimentalFeature && IsOverheated;
-        if (experimentalFeatureNoGCDsBeyondThisPoint) return false;
-
-        // Executes Bioblaster, and then checks for AirAnchor or HotShot, and Drill based on availability and conditions.
-        //if (BioblasterPvE.CanUse(out act))
-        //{
-        //    return true;
-        //}
-
-        // Check if SpreadShot cannot be used
-        //if (!SpreadShotPvE.CanUse(out _))
-        //{
         // Check if AirAnchor can be used
         if (AirAnchorPvE.CanUse(out act))
         {
@@ -278,64 +273,6 @@ public sealed class MCH_TEA : MachinistRotation
         {
             return true;
         }
-
-        if (TestDisablePointlessCode && ExcavatorPvE.CanUse(out act, usedUp: true))
-        {
-            return true;
-        }
-
-        if (TestDisablePointlessCode && ChainSawPvE.CanUse(out act, usedUp: true))
-        {
-            return true;
-        }
-
-        //if (!CombatElapsedLessGCD(3) && DrillPvE.CanUse(out act, usedUp: true))
-        //{
-        //    return true;
-        //}
-
-        if (TestDisablePointlessCode && Player.HasStatus(true, StatusID.FullMetalMachinist) && FullMetalFieldPvE.CanUse(out act, usedUp: true))
-        {
-            return true;
-        }
-        //}
-
-        // Special condition for using ChainSaw outside of AoE checks if no action is chosen within 4 GCDs.
-        if (TestDisablePointlessCode && !CombatElapsedLessGCD(1) && ChainSawPvE.CanUse(out act, skipAoeCheck: true))
-        {
-            return true;
-        }
-
-        if (TestDisablePointlessCode && ExcavatorPvE.CanUse(out act, skipAoeCheck: true))
-        {
-            return true;
-        }
-
-        //if (!ChainSawPvE.Cooldown.WillHaveOneCharge(6f) && !CombatElapsedLessGCD(6))
-        //{
-        //    if (DrillPvE.CanUse(out act, usedUp: true))
-        //    {
-        //        return true;
-        //    }
-        //}
-
-        // AoE actions: ChainSaw and SpreadShot based on their usability.
-        //if (SpreadShotPvE.CanUse(out _))
-        //{
-        //    if (ChainSawPvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-
-        //    if (ExcavatorPvE.CanUse(out act))
-        //    {
-        //        return true;
-        //    }
-        //}
-        //if (FullMetalFieldPvE.CanUse(out act))
-        //{
-        //    return true;
-        //}
 
         if (SpreadShotPvE.CanUse(out act))
         {
@@ -366,72 +303,7 @@ public sealed class MCH_TEA : MachinistRotation
     protected override void UpdateInfo()
     {
         OpenerReady();
-    }
-
-    // Logic for Hypercharge
-    private bool CanUseHyperchargePvE(out IAction? act)
-    {
-        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)))
-        {
-            return HyperchargePvE.CanUse(out act);
-        }
-
-        float REST_TIME = 6f;
-        if
-                     //Cannot AOE
-                     (!SpreadShotPvE.CanUse(out _)
-                     &&
-                     // AirAnchor Enough Level % AirAnchor 
-                     (AirAnchorPvE.EnoughLevel && AirAnchorPvE.Cooldown.WillHaveOneCharge(REST_TIME)
-                     ||
-                     // HotShot Charge Detection
-                     !AirAnchorPvE.EnoughLevel && HotShotPvE.EnoughLevel && HotShotPvE.Cooldown.WillHaveOneCharge(REST_TIME)
-                     ||
-                     // Drill Charge Detection
-                     DrillPvE.EnoughLevel && DrillPvE.Cooldown.WillHaveOneCharge(REST_TIME)
-                     ||
-                     // Chainsaw Charge Detection
-                     ChainSawPvE.EnoughLevel && ChainSawPvE.Cooldown.WillHaveOneCharge(REST_TIME)))
-        {
-            act = null;
-            return false;
-        }
-        else
-        {
-            // Use Hypercharge
-            return HyperchargePvE.CanUse(out act);
-        }
-    }
-
-    private bool CanUseQueenMeow(out IAction? act)
-    {
-        // Define conditions under which the Rook Autoturret/Queen can be used.
-        bool NoQueenLogic = SkipQueenLogic;
-        bool QueenOne = Battery >= 60 && CombatElapsedLess(25f);
-        bool QueenTwo = Battery >= 90 && !CombatElapsedLess(58f) && CombatElapsedLess(78f);
-        bool QueenThree = Battery >= 100 && !CombatElapsedLess(111f) && CombatElapsedLess(131f);
-        bool QueenFour = Battery >= 50 && !CombatElapsedLess(148f) && CombatElapsedLess(168f);
-        bool QueenFive = Battery >= 60 && !CombatElapsedLess(178f) && CombatElapsedLess(198f);
-        bool QueenSix = Battery >= 100 && !CombatElapsedLess(230f) && CombatElapsedLess(250f);
-        bool QueenSeven = Battery >= 50 && !CombatElapsedLess(268f) && CombatElapsedLess(288f);
-        bool QueenEight = Battery >= 70 && !CombatElapsedLess(296f) && CombatElapsedLess(316f);
-        bool QueenNine = Battery >= 100 && !CombatElapsedLess(350f) && CombatElapsedLess(370f);
-        bool QueenTen = Battery >= 50 && !CombatElapsedLess(388f) && CombatElapsedLess(408f);
-        bool QueenEleven = Battery >= 80 && !CombatElapsedLess(416f) && CombatElapsedLess(436f);
-        bool QueenTwelve = Battery >= 100 && !CombatElapsedLess(470f) && CombatElapsedLess(490f);
-        bool QueenThirteen = Battery >= 50 && !CombatElapsedLess(505f) && CombatElapsedLess(525f);
-        bool QueenFourteen = Battery >= 60 && !CombatElapsedLess(538f) && CombatElapsedLess(558f);
-        bool QueenFifteen = Battery >= 100 && !CombatElapsedLess(590f) && CombatElapsedLess(610f);
-
-        if (NoQueenLogic || QueenOne || QueenTwo || QueenThree || QueenFour || QueenFive || QueenSix || QueenSeven || QueenEight || QueenNine || QueenTen || QueenEleven || QueenTwelve || QueenThirteen || QueenFourteen || QueenFifteen)
-        {
-            if (RookAutoturretPvE.CanUse(out act))
-            {
-                return true;
-            }
-        }
-        act = null;
-        return false;
+        OpenerStarter();
     }
 
     private void OpenerStarter()
@@ -499,81 +371,18 @@ public sealed class MCH_TEA : MachinistRotation
                 return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
 
             case 1:
-                return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true));
 
             case 2:
-                return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
+                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act));
 
             case 3:
                 return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
 
             case 4:
-                return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true));
-
-            case 5:
-                return OpenerController(IsLastGCD(false, ChainSawPvE), ChainSawPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            case 6:
-                return OpenerController(IsLastGCD(true, ExcavatorPvE), ExcavatorPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            case 7:
-                return OpenerController(IsLastAbility(true, RookAutoturretPvE), RookAutoturretPvE.CanUse(out act, usedUp: true));
-
-            case 8:
-                return OpenerController(IsLastAbility(false, ReassemblePvE), ReassemblePvE.CanUse(out act, usedUp: true));
-
-            case 9:
-                return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
-
-            case 10:
-                return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            case 11:
-                return OpenerController(IsLastAbility(false, WildfirePvE), WildfirePvE.CanUse(out act));
-
-            case 12:
-                return OpenerController(IsLastGCD(true, FullMetalFieldPvE), FullMetalFieldPvE.CanUse(out act, skipAoeCheck: true));
-
-            case 13:
-                return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            case 14:
                 return OpenerController(IsLastAbility(false, HyperchargePvE), HyperchargePvE.CanUse(out act, usedUp: true));
 
-            //case 15:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 4, HeatBlastPvE.CanUse(out act, usedUp: true));
-
-            //case 16:
-            //    return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            //case 17:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 3, HeatBlastPvE.CanUse(out act, usedUp: true));
-
-            //case 18:
-            //    return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            //case 19:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 2, HeatBlastPvE.CanUse(out act, usedUp: true));
-
-            //case 20:
-            //    return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            //case 21:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 1, HeatBlastPvE.CanUse(out act, usedUp: true));
-
-            //case 22:
-            //    return OpenerController(IsLastAbility(true, GaussRoundPvE), GaussRoundPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            //case 23:
-            //    return OpenerController(IsLastGCD(false, HeatBlastPvE) && OverheatedStacks == 0, HeatBlastPvE.CanUse(out act, usedUp: true));
-
-            //case 24:
-            //    return OpenerController(IsLastAbility(true, RicochetPvE), RicochetPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
-
-            //case 25:
-            //    return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
-
-            case 15:
+            case 5:
                 OpenerHasFinished = true;
                 Openerstep = 0;
                 break;
@@ -582,40 +391,36 @@ public sealed class MCH_TEA : MachinistRotation
         return OpenerHasFinishedDummy = false;
     }
 
-    private bool ShouldUseBurstMedicine(out IAction? act)
+    // Logic for Hypercharge
+    private bool CanUseHyperchargePvE(out IAction? act)
     {
-        act = null;  // Default to null if Tincture cannot be used.
-
-        // Don't use Tincture if player has a bad status
-        if (Player.HasStatus(false, StatusID.Weakness) || Player.HasStatus(true, StatusID.Transcendent) || Player.HasStatus(true, StatusID.BrinkOfDeath))
+        if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)))
         {
+            return HyperchargePvE.CanUse(out act);
+        }
+
+        float REST_TIME = 6f;
+        if
+                     //Cannot AOE
+                     (!SpreadShotPvE.CanUse(out _)
+                     &&
+                     // AirAnchor Enough Level % AirAnchor 
+                     (AirAnchorPvE.EnoughLevel && AirAnchorPvE.Cooldown.WillHaveOneCharge(REST_TIME)
+                     ||
+                     // HotShot Charge Detection
+                     !AirAnchorPvE.EnoughLevel && HotShotPvE.EnoughLevel && HotShotPvE.Cooldown.WillHaveOneCharge(REST_TIME)
+                     ||
+                     // Drill Charge Detection
+                     DrillPvE.EnoughLevel && DrillPvE.Cooldown.WillHaveOneCharge(REST_TIME)))
+        {
+            act = null;
             return false;
         }
-
-        if (WildfirePvE.Cooldown.RecastTimeRemainOneCharge <= 20 && CombatTime > 60 &&
-            NextAbilityToNextGCD > 1.2 &&
-            !Player.HasStatus(true, StatusID.Weakness) &&
-            DrillPvE.Cooldown.RecastTimeRemainOneCharge < 5 &&
-            AirAnchorPvE.Cooldown.RecastTimeRemainOneCharge < 5)
+        else
         {
-            // Attempt to use Burst Medicine.
-            return UseBurstMedicine(out act, false);
+            // Use Hypercharge
+            return HyperchargePvE.CanUse(out act);
         }
-
-        //if (WildfirePvE.Cooldown.RecastTimeRemainOneCharge <= 10
-        //    && !Target.HasStatus(true, StatusID.Wildfire)
-        //    && Target != Player
-        //    && CombatTime > 300
-        //    && !Player.HasStatus(true, StatusID.Weakness)
-        //    && AirAnchorPvE.Cooldown.IsCoolingDown
-        //    && IsLastAbility(ActionID.BarrelStabilizerPvE)
-        //    && DrillPvE.Cooldown.RecastTimeRemainOneCharge < 2.5f)
-        //{
-        //    return UseBurstMedicine(out act, false);
-        //}
-
-        // If the conditions are not met, return false.
-        return false;
     }
     #endregion
 
@@ -623,32 +428,20 @@ public sealed class MCH_TEA : MachinistRotation
     {
         float paddingX = ImGui.GetStyle().WindowPadding.X;
         DisplayStatusHelper.BeginPaddedChild("The CustomRotation's status window", true, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
-
         ImGui.Text("Rotation: " + Name + " ");
         ImGui.SameLine();
         ImGui.TextDisabled(Description);
-
         DisplayStatusHelper.DisplayGCDStatus();
-
         //var gameobjectID = DataBase.DisplayPlayerGameObjectId();
-
         if (ImGui.Button(nameof(ActionID.PelotonPvE)))
         {
             ActionManagerHelper.Instance.InstanceActionManager->UseAction(ActionType.Action, (uint)ActionID.PelotonPvE);
         }
-
-        ImGui.Spacing();
-        ImGui.Spacing();
-
-        ImGui.Text("InBurst: " + InBurst.ToString());
-
-        ImGui.Spacing();
-        ImGui.Spacing();
-
-        ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
-        ImGui.Text("DefaultGCDRemain" + CustomRotationEx.DefaultGCDRemain.ToString());
-        ImGui.Text("Openerstep: " + Openerstep.ToString());
-
         DisplayStatusHelper.EndPaddedChild();
+        ImGui.Text("OpenerAvailable: " + OpenerAvailable.ToString());
+        ImGui.Text("StartOpener: " + StartOpener.ToString());
+        ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
+        ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
+        ImGui.Text("Openerstep: " + Openerstep.ToString());
     }
 }
