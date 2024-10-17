@@ -991,11 +991,12 @@ public sealed class MCH_ALT : MachinistRotation
         DisplayStatusHelper.EndPaddedChild();
     }
 
+    // Currently no use for.
     /// <summary>
     /// Handles actions when the territory changes.
     /// </summary>
     //public override void OnTerritoryChanged()
     //{
-        //CreateSystemWarning("Changed Territory");
+    //CreateSystemWarning("Changed Territory");
     //}
 }
