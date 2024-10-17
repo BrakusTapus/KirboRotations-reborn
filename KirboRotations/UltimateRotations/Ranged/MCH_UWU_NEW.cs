@@ -39,6 +39,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     public bool OpenerHasFinishedDummy { get; private set; }
     public bool OpenerHasFinished { get; private set; }
     public int Openerstep { get; private set; }
+    const float universalFailsafeThreshold = 5.0f;
     public bool OpenerAvailable { get; private set; }
     public bool OpenerInProgress { get; private set; }
     public bool StartOpener { get; private set; }
@@ -384,6 +385,14 @@ public sealed class MCH_UWU_NEW : MachinistRotation
 
     private bool Opener(out IAction? act)
     {
+        // Universal failsafe for opener inactivity
+        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && Openerstep > 0)
+        {
+            act = null;
+            OpenerHasFinished = true;  // Stop the opener
+            return false;  // Stop further action
+        }
+
         switch (Openerstep)
         {
             case 0:

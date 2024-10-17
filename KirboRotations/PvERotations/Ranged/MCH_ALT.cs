@@ -70,24 +70,28 @@ public sealed class MCH_ALT : MachinistRotation
     #endregion
 
     #region Countdown logic
-    // Defines logic for actions to take during the countdown before combat starts.
+    /// <summary>
+    /// Defines logic for actions to take during the countdown before combat starts.
+    /// </summary>
+    /// <param name="remainTime"></param>
+    /// <returns></returns>
     protected override IAction? CountDownAction(float remainTime)
     {
-        if (remainTime < 4.85f)
+        if (remainTime < 4.95f)
         {
             if (ReassemblePvE.CanUse(out var act) && !Player.HasStatus(true, StatusID.Reassembled))
             {
                 return act;
             }
         }
-        if (remainTime < 1.0f)
+        if (remainTime < 1.1f)
         {
             if (UseBurstMedicine(out var act))
             {
                 return act;
             }
         }
-        if (remainTime < 0.4f)
+        if (remainTime < 0.5f)
         {
             if (AirAnchorPvE.CanUse(out var act))
             {
@@ -400,13 +404,20 @@ public sealed class MCH_ALT : MachinistRotation
     #endregion
 
     #region Extra Methods
+    /// <summary>
+    /// Updates the custom fields.
+    /// </summary>
     protected override void UpdateInfo()
     {
         OpenerReady();
         OpenerStarter();
     }
 
-    // Logic for Hypercharge
+    /// <summary>
+    /// Logic for Hypercharge
+    /// </summary>
+    /// <param name="act"></param>
+    /// <returns></returns>
     private bool CanUseHyperchargePvE(out IAction? act)
     {
         if (IsLastGCD(ActionID.FullMetalFieldPvE) && IsLastAbility(ActionID.WildfirePvE) && (Heat >= 50 || Player.HasStatus(true, StatusID.Hypercharged)))
@@ -441,9 +452,13 @@ public sealed class MCH_ALT : MachinistRotation
         }
     }
 
+    /// <summary>
+    /// Logic for Rook Autoturret/Queen.
+    /// </summary>
+    /// <param name="act"></param>
+    /// <returns></returns>
     private bool CanUseQueenMeow(out IAction? act)
     {
-
         // Define conditions under which the Rook Autoturret/Queen can be used.
         bool NoQueenLogic = SkipQueenLogic;
         bool QueenOne = Battery >= 50 && CombatElapsedLess(25f);
@@ -473,6 +488,11 @@ public sealed class MCH_ALT : MachinistRotation
         return false;
     }
 
+    /// <summary>
+    /// Manages the initiation and reset logic for the opener sequence. 
+    /// If the opener has finished, it resets relevant flags and step counters. 
+    /// Otherwise, it toggles the 'OpenerInProgress' state based on whether the opener is set to start.
+    /// </summary>
     private void OpenerStarter()
     {
         if (OpenerHasFinished)
@@ -491,6 +511,18 @@ public sealed class MCH_ALT : MachinistRotation
         }
     }
 
+    private void ResetOpenerValues()
+    {
+        StartOpener = false;
+        OpenerInProgress = false;
+        OpenerHasFinished = false;
+        Openerstep = 0;
+    }
+
+    /// <summary>
+    /// Method that checks the opener requirements.
+    /// </summary>
+    /// <returns></returns>
     private bool OpenerReady()
     {
         var Lvl100 = Player.Level == 100;
@@ -523,6 +555,14 @@ public sealed class MCH_ALT : MachinistRotation
         return false;
     }
 
+    /// <summary>
+    /// <br>Method that allows using actions in a specific order.</br>
+    /// <br>First checks if lastAction used matches specified action, if true, increases openerstep.</br>
+    /// <br>If first check is false, then 'nextAction' calls and executes the specified action's 'CanUse' method </br>
+    /// </summary>
+    /// <param name="lastAction"></param>
+    /// <param name="nextAction"></param>
+    /// <returns></returns>
     private bool OpenerController(bool lastAction, bool nextAction)
     {
         if (lastAction)
@@ -533,6 +573,11 @@ public sealed class MCH_ALT : MachinistRotation
         return nextAction;
     }
 
+    /// <summary>
+    /// Opener sequence logic.
+    /// </summary>
+    /// <param name="act"></param>
+    /// <returns></returns>
     private bool Opener(out IAction? act)
     {
         // Universal failsafe for opener inactivity
@@ -868,6 +913,11 @@ public sealed class MCH_ALT : MachinistRotation
         return false;
     }
 
+    /// <summary>
+    /// Tincture logic.
+    /// </summary>
+    /// <param name="act"></param>
+    /// <returns></returns>
     private bool ShouldUseBurstMedicine(out IAction? act)
     {
         act = null;  // Default to null if Tincture cannot be used.
@@ -893,6 +943,9 @@ public sealed class MCH_ALT : MachinistRotation
     }
     #endregion
 
+    /// <summary>
+    /// Displays extra status information.
+    /// </summary>
     public unsafe override void DisplayStatus()
     {
         float paddingX = ImGui.GetStyle().WindowPadding.X;
@@ -910,10 +963,11 @@ public sealed class MCH_ALT : MachinistRotation
         }
         if (ImGui.Button("Reset Opener values"))
         {
-            StartOpener = false;
-            OpenerInProgress = false;
-            OpenerHasFinished = false;
-            Openerstep = 0;
+            ResetOpenerValues();
+            //StartOpener = false;
+            //OpenerInProgress = false;
+            //OpenerHasFinished = false;
+            //Openerstep = 0;
         }
         ImGui.EndGroup();
 
@@ -936,4 +990,12 @@ public sealed class MCH_ALT : MachinistRotation
 
         DisplayStatusHelper.EndPaddedChild();
     }
+
+    /// <summary>
+    /// Handles actions when the territory changes.
+    /// </summary>
+    //public override void OnTerritoryChanged()
+    //{
+        //CreateSystemWarning("Changed Territory");
+    //}
 }
