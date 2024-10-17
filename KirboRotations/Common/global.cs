@@ -1,4 +1,5 @@
 ﻿global using System.Numerics;
+global using Dalamud.Game.ClientState.JobGauge.Enums;
 global using Dalamud.Interface.Utility;
 global using ImGuiNET;
 global using RotationSolver.Basic.Actions;
