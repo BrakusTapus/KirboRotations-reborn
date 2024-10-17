@@ -19,8 +19,7 @@ internal class MCH_TESTERPvE : MachinistRotation
     }
 
     private bool IsPvPOverheated => Player.HasStatus(true, StatusID.Overheated_3149);
-
-    private bool ListOfPvPMitStatusses;
+    private float OverheatedStatusTime => Player.StatusTime(true, StatusID.Overheated_3149);
 
     private static IBaseAction MarksmansSpitePvP { get; } = new BaseAction((ActionID)29415);
 
@@ -215,6 +214,9 @@ internal class MCH_TESTERPvE : MachinistRotation
     #endregion IBaseActions
 
     #region Rotation Config
+    [RotationConfig(CombatType.PvP, Name = "Emergency Healing")]
+    public bool EmergencyHealing { get; set; } = false;
+
     [RotationConfig(CombatType.PvP, Name = "Recuperate")]
     public int Recuperate { get; set; } = 37500;
 
@@ -258,7 +260,10 @@ internal class MCH_TESTERPvE : MachinistRotation
         ImGui.TextWrapped("LimitBreakLevel: " + CustomRotationEx.CurrentLimitBreakLevel);
         ImGuiToolTipsKirbo.HoveredTooltip("CurrentUnits: " + CustomRotationEx.CurrentCurrentUnits);
 
+        ImGui.TextWrapped("HeatStacks: " + PvP_HeatStacks);
         ImGui.TextWrapped("IsPvPOverheated: " + IsPvPOverheated);
+        ImGui.TextWrapped("Overheated StatusTime: " + Player.StatusTime(true, StatusID.Overheated_3149).ToString("F1"));
+
 
         ImGui.TextWrapped("BlastChargePvP Target: " + BlastChargePvP.Target.Target?.ToString());
         ImGui.TextWrapped("BishopAutoturretPvP Target: " + BishopAutoturretPvP.Target.Target?.ToString());
@@ -271,6 +276,27 @@ internal class MCH_TESTERPvE : MachinistRotation
     protected override bool GeneralGCD(out IAction? act)
     {
         act = null;
+        if (EmergencyHealing && EmergencyLowHP(out act))
+        {
+            return true;
+        }
+        if (MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1 && !Target.HasStatus(false, StatusID.Guard))
+        {
+            //if (CurrentTarget.Name.ToString() == "Striking Dummy") return true;
+            //if (CurrentTarget == Player || CurrentTarget == null) return false;
+            //if (CurrentTarget.HasStatus(false, StatusID.Guard)) return false;
+            //if (CurrentTarget.CurrentHp == CurrentTarget.MaxHp) return false;
+            // OverheatedStatusTime
+            if (Target.HasStatus(true, StatusID.Wildfire_1323) && IsPvPOverheated && OverheatedStatusTime < 1 && CurrentTarget.CurrentHp <= 50000) return true;
+            if (Target.HasStatus(false, StatusID.Mortared) && CurrentTarget.CurrentHp <= 39600) return true;
+            if (CurrentTarget.IsJobCategory(JobRole.Healer) && CurrentTarget.CurrentHp >= 15000 && CurrentTarget.CurrentHp <= 36000) return true;
+            if (CurrentTarget.IsJobCategory(JobRole.RangedMagical) && CurrentTarget.CurrentHp >= 15000 && CurrentTarget.CurrentHp <= 36000) return true;
+            if (CurrentTarget.IsJobCategory(JobRole.RangedPhysical) && CurrentTarget.CurrentHp >= 15000 && CurrentTarget.CurrentHp <= 36000) return true;
+            if (CurrentTarget.IsJobCategory(JobRole.Melee) && CurrentTarget.CurrentHp >= 10000 && CurrentTarget.CurrentHp <= 25000) return true;
+            if (CurrentTarget.IsJobCategory(JobRole.Tank) && CurrentTarget.CurrentHp >= 10000 && CurrentTarget.CurrentHp <= 20000) return true;
+
+        }
+
         // Status checks
         bool targetIsNotPlayer = Target != Player;
         bool playerHasGuard = Player.HasStatus(true, StatusID.Guard);
@@ -294,13 +320,13 @@ internal class MCH_TESTERPvE : MachinistRotation
             return false;
         }
 
-        if (NumberOfHostilesInRange > 0 && AnalysisPvP.CanUse(out act, usedUp: true) && Player.HasStatus(true, StatusID.DrillPrimed) && DrillPvP.CanUse(out _))
+        if (NumberOfHostilesInRange > 0 && !Player.HasStatus(true, StatusID.Analysis) && AnalysisPvP.CanUse(out act, usedUp: true) && Player.HasStatus(true, StatusID.DrillPrimed) && DrillPvP.CanUse(out _))
         {
             return AnalysisPvP.CanUse(out act, usedUp: true);
         }
 
         // A Analysis buffed PvE_Drill should be used if target has Guard
-        if (drillOnGuard && targetHasGuard && DrillPvP.CanUse(out act, usedUp: true))
+        if (drillOnGuard && targetHasGuard && DrillPvP.CanUse(out act, usedUp: true) && Player.HasStatus(true, StatusID.DrillPrimed) && !Player.HasStatus(true, StatusID.Analysis))
         {
             if (AnalysisPvP.Cooldown.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Analysis))
             {
@@ -327,17 +353,17 @@ internal class MCH_TESTERPvE : MachinistRotation
         }
 
         // Marks Man should already be taking into invulns into account
-        bool toolow = Target.CurrentHp < 5000 ;
-        bool toomuch = Target.CurrentHp >= 25000;
-        bool oktouse = !toolow && !toomuch;
-        if (oktouse && !IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1)
-        {
-            return true;
-        }
+        //bool toolow = Target.CurrentHp < 5000 ;
+        //bool toomuch = Target.CurrentHp >= 25000;
+        //bool oktouse = !toolow && !toomuch;
+        //if (oktouse && !IsPvPOverheated && MarksmansSpitePvP.CanUse(out act) && CustomRotationEx.CurrentLimitBreakLevel == 1)
+        //{
+        //    return true;
+        //}
 
         // When PvE_Drill can be used we first check if we can buff it with analysis
         // Note: PvE_Drill should always be buffed tbh
-        if (DrillPvP.CanUse(out act, usedUp: true) && Target != Player && !IsPvPOverheated)
+        if (DrillPvP.CanUse(out act, usedUp: true) && Target != Player && !IsPvPOverheated && Player.HasStatus(true, StatusID.DrillPrimed))
         {
             if (AnalysisPvP.Cooldown.CurrentCharges > 0 && !Player.HasStatus(true, StatusID.Analysis))
             {
@@ -354,26 +380,26 @@ internal class MCH_TESTERPvE : MachinistRotation
         }
 
         // Uses BioBlaster automatically when a Target is in range
-        if (!IsPvPOverheated && BioblasterPvP.CanUse(out act))
+        if (!IsPvPOverheated && BioblasterPvP.CanUse(out act, usedUp: true) && Target != Player && Player.HasStatus(true, StatusID.BioblasterPrimed) && Target.DistanceToPlayer() < 12)
         {
             return true;
         }
 
         // Air Anchor is used if Player is not overheated and available
-        if (!IsPvPOverheated && AirAnchorPvP.CanUse(out act, usedUp: true))
+        if (!IsPvPOverheated && AirAnchorPvP.CanUse(out act, usedUp: true) && Player.HasStatus(true, StatusID.AirAnchorPrimed))
         {
             return true;
         }
 
         // Chain Saw is used if Player is not overheated and available
         // Note: Analysis will be used to buff Chain Saw if Target has around half of their HP
-        if (!IsPvPOverheated && ChainSawPvP.CanUse(out act, usedUp: true))
+        if (!IsPvPOverheated && ChainSawPvP.CanUse(out act, usedUp: true, skipAoeCheck: true) && Player.HasStatus(true, StatusID.ChainSawPrimed))
         {
             return true;
         }
 
         // Scattergun is used if Player is not overheated and available
-        if (!IsPvPOverheated && ScattergunPvP.CanUse(out act, usedUp: true, skipAoeCheck: true) && ScattergunPvP.Target.Target.DistanceToPlayer() <= 12)
+        if (!IsPvPOverheated && ScattergunPvP.CanUse(out act, usedUp: true, skipAoeCheck: true) && ScattergunPvP.Target.Target.DistanceToPlayer() <= 3)
         {
             return true;
         }
@@ -402,7 +428,10 @@ internal class MCH_TESTERPvE : MachinistRotation
     protected override bool EmergencyAbility(IAction nextGCD, out IAction? act)
     {
         act = null;
-
+        if (EmergencyHealing && EmergencyLowHP(out act))
+        {
+            return true;
+        }
         //var highPriority = availableCharas.Where(ObjectHelper.IsTopPriorityHostile);
         //if (highPriority.Any())
         //{
@@ -495,6 +524,7 @@ internal class MCH_TESTERPvE : MachinistRotation
         if (BishopAutoturretPvP.CanUse(out act, skipAoeCheck: true)) // Without MustUse, returns CastType 7 invalid // BishopAutoturretPvP.action.CastType
         {
             BishopAutoturretPvP.Action.CastType = 3; // TODO: try 3/4/10 
+            BishopAutoturretPvP.Setting.TargetType = TargetType.Self;
             return true;
         }
 
@@ -505,23 +535,23 @@ internal class MCH_TESTERPvE : MachinistRotation
             {
                 return false;
             }
-            if (AnalysisPvP.Cooldown.CurrentCharges > 0 && Player.HasStatus(true, StatusID.DrillPrimed) && PvP_HeatStacks <= 4 && !WildfirePvP.Cooldown.WillHaveOneCharge(10))
+            //if (AnalysisPvP.Cooldown.CurrentCharges > 0 && Player.HasStatus(true, StatusID.DrillPrimed) && PvP_HeatStacks <= 4 && !WildfirePvP.Cooldown.WillHaveOneCharge(10))
+            //{
+            //    return true;
+            //}
+            if (analysisOnDrill && nextGCD.IsTheSameTo(false, DrillPvP) && Player.HasStatus(true, StatusID.DrillPrimed))
             {
                 return true;
             }
-            if (analysisOnDrill && nextGCD == DrillPvP)
+            else if (analysisOnChainsaw && nextGCD.IsTheSameTo(false, ChainSawPvP) && Target != Player && Target.GetHealthRatio() <= 0.50 && Player.HasStatus(true, StatusID.ChainSawPrimed))
             {
                 return true;
             }
-            else if (analysisOnChainsaw && nextGCD == ChainSawPvP && Target != Player && Target.GetHealthRatio() <= 0.55)
+            else if (analysisOnBioBlaster && nextGCD.IsTheSameTo(false, BioblasterPvP) && Player.HasStatus(true, StatusID.BioblasterPrimed))
             {
                 return true;
             }
-            else if (analysisOnBioBlaster && nextGCD == BioblasterPvP)
-            {
-                return true;
-            }
-            else if (analysisOnAirAnchor && nextGCD == AirAnchorPvP)
+            else if (analysisOnAirAnchor && nextGCD.IsTheSameTo(false, AirAnchorPvP) && Player.HasStatus(true, StatusID.AirAnchorPrimed))
             {
                 return true;
             }
@@ -531,6 +561,30 @@ internal class MCH_TESTERPvE : MachinistRotation
     }
     #endregion oGCD Logic
 
+    private bool EmergencyLowHP(out IAction? act)
+    {
+        if (Player.CurrentHp <= 25000 && GuardPvP.CanUse(out _) && !Player.HasStatus(true, StatusID.Guard))
+        {
+            return GuardPvP.CanUse(out act);
+        }
+
+        if (Player.CurrentMp == Player.MaxMp && Player.CurrentHp <= 37500 && !Player.HasStatus(true, StatusID.Guard) && RecuperatePvP.CanUse(out _))
+        {
+            return RecuperatePvP.CanUse(out act);
+        }
+
+        if (Player.CurrentMp >= 7500 && Player.CurrentHp <= 37500 && !Player.HasStatus(true, StatusID.Guard) && RecuperatePvP.CanUse(out _))
+        {
+            return RecuperatePvP.CanUse(out act);
+        }
+
+        if (Player.CurrentMp >= 2500 && Player.CurrentHp <= 25000 && GuardPvP.Cooldown.IsCoolingDown && !Player.HasStatus(true, StatusID.Guard) && RecuperatePvP.CanUse(out _))
+        {
+            return RecuperatePvP.CanUse(out act);
+        }
+        act = null;
+        return false;
+    }
 }
 
 
