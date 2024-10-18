@@ -563,7 +563,13 @@ internal class MCH_TESTERPvE : MachinistRotation
 
     private bool EmergencyLowHP(out IAction? act)
     {
-        if (Player.CurrentHp <= 25000 && GuardPvP.CanUse(out _) && !Player.HasStatus(true, StatusID.Guard))
+        if (Player.HasStatus(true, StatusID.Guard))
+        {
+            act = null;
+            return false;
+        }
+
+        if (Player.CurrentHp <= 25000 && GuardPvP.CanUse(out _) && !Player.HasStatus(true, StatusID.Guard) && NumberOfHostilesInMaxRange >= 1)
         {
             return GuardPvP.CanUse(out act);
         }
@@ -574,6 +580,11 @@ internal class MCH_TESTERPvE : MachinistRotation
         }
 
         if (Player.CurrentMp >= 7500 && Player.CurrentHp <= 37500 && !Player.HasStatus(true, StatusID.Guard) && RecuperatePvP.CanUse(out _))
+        {
+            return RecuperatePvP.CanUse(out act);
+        }
+
+        if (Player.CurrentMp >= 5000 && Player.CurrentHp <= 32000 && !Player.HasStatus(true, StatusID.Guard) && RecuperatePvP.CanUse(out _))
         {
             return RecuperatePvP.CanUse(out act);
         }
