@@ -34,7 +34,7 @@ public sealed class MCH_UWU : MachinistRotation
 
     public bool OpenerHasFinishedDummy { get; private set; }
     public bool OpenerHasFinished { get; private set; }
-    public int Openerstep { get; private set; }
+    public int OpenerStep { get; private set; }
     public bool OpenerAvailable { get; private set; }
     public bool OpenerInProgress { get; private set; }
     public bool StartOpener { get; private set; }
@@ -407,7 +407,7 @@ public sealed class MCH_UWU : MachinistRotation
         bool NoHeat = Heat == 0;
         bool NoBattery = Battery == 0;
         bool NoResources = NoHeat && NoBattery;
-        bool Openerstep0 = Openerstep == 0;
+        bool Openerstep0 = OpenerStep == 0;
 
         OpenerAvailable = Lvl70
                                     && HasHotShot
@@ -426,7 +426,7 @@ public sealed class MCH_UWU : MachinistRotation
     {
         if (lastAction)
         {
-            Openerstep++;
+            OpenerStep++;
             return false;
         }
         return nextAction;
@@ -434,7 +434,7 @@ public sealed class MCH_UWU : MachinistRotation
 
     private bool Opener(out IAction? act)
     {
-        switch (Openerstep)
+        switch (OpenerStep)
         {
             case 0:
                 return OpenerController(IsLastAbility(false, BarrelStabilizerPvE), BarrelStabilizerPvE.CanUse(out act, usedUp: true, skipAoeCheck: true));
@@ -450,7 +450,7 @@ public sealed class MCH_UWU : MachinistRotation
 
             case 4:
                 OpenerHasFinished = true;
-                Openerstep = 0;
+                OpenerStep = 0;
                 break;
         }
         act = null;
@@ -507,6 +507,6 @@ public sealed class MCH_UWU : MachinistRotation
         ImGui.Text("StartOpener: " + StartOpener.ToString());
         ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
         ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
-        ImGui.Text("Openerstep: " + Openerstep.ToString());
+        ImGui.Text("OpenerStep: " + OpenerStep.ToString());
     }
 }

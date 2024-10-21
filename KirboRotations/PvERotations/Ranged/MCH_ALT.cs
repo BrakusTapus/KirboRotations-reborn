@@ -62,7 +62,7 @@ public sealed class MCH_ALT : MachinistRotation
     private bool OpenerHasFinished { get; set; } = false;
     private bool OpenerHasFinishedDummy { get; set; } = false;
     private bool OpenerAvailable { get; set; } = false;
-    private int Openerstep { get; set; } = 0;
+    private int OpenerStep { get; set; } = 0;
     const float universalFailsafeThreshold = 5.0f;
     private bool InBurst => Player.HasStatus(true, StatusID.Wildfire_1946);
     private bool IsSecond0GCD => WeaponRemain >= 0.59f && WeaponRemain <= 0.80f && CustomRotationEx.GetCurrentAnimationLock() == 0;
@@ -497,7 +497,7 @@ public sealed class MCH_ALT : MachinistRotation
         if (OpenerHasFinished)
         {
             StartOpener = false;
-            Openerstep = 0;
+            OpenerStep = 0;
             OpenerHasFinished = false;
         }
         if (StartOpener)
@@ -515,7 +515,7 @@ public sealed class MCH_ALT : MachinistRotation
         StartOpener = false;
         OpenerInProgress = false;
         OpenerHasFinished = false;
-        Openerstep = 0;
+        OpenerStep = 0;
     }
 
     /// <summary>
@@ -537,7 +537,7 @@ public sealed class MCH_ALT : MachinistRotation
         bool NoHeat = Heat == 0;
         bool NoBattery = Battery == 0;
         bool NoResources = NoHeat && NoBattery;
-        bool Openerstep0 = Openerstep == 0;
+        bool openerStep0 = OpenerStep == 0;
 
         OpenerAvailable = Lvl100
                                     && HasChainSaw
@@ -550,7 +550,7 @@ public sealed class MCH_ALT : MachinistRotation
                                     && HasWildfire
                                     && ReassembleOneCharge
                                     && NoResources
-                                    && Openerstep0;
+                                    && openerStep0;
         return false;
     }
 
@@ -566,7 +566,7 @@ public sealed class MCH_ALT : MachinistRotation
     {
         if (lastAction)
         {
-            Openerstep++;
+            OpenerStep++;
             return false;
         }
         return nextAction;
@@ -580,7 +580,7 @@ public sealed class MCH_ALT : MachinistRotation
     private bool Opener(out IAction? act)
     {
         // Universal failsafe for opener inactivity
-        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && Openerstep > 0)
+        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && OpenerStep > 0)
         {
             act = null;
             OpenerHasFinished = true;  // Stop the opener
@@ -590,7 +590,7 @@ public sealed class MCH_ALT : MachinistRotation
         switch (SelectedOpener)
         {
             case Openers.Default:
-                switch (Openerstep)
+                switch (OpenerStep)
                 {
                     case 0:
                         return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
@@ -655,13 +655,13 @@ public sealed class MCH_ALT : MachinistRotation
 
                     case 15:
                         OpenerHasFinished = true;
-                        Openerstep = 0;
+                        OpenerStep = 0;
                         break;
                 }
                 break;
 
             case Openers.Alternative:
-                switch (Openerstep)
+                switch (OpenerStep)
                 {
                     case 0:
                         return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
@@ -780,13 +780,13 @@ public sealed class MCH_ALT : MachinistRotation
 
                     case 32:
                         OpenerHasFinished = true;
-                        Openerstep = 0;
+                        OpenerStep = 0;
                         break;
                 }
                 break;
 
             case Openers.Beta:
-                switch (Openerstep)
+                switch (OpenerStep)
                 {
                     case 0:
                         return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
@@ -902,7 +902,7 @@ public sealed class MCH_ALT : MachinistRotation
 
                     case 32:
                         OpenerHasFinished = true;
-                        Openerstep = 0;
+                        OpenerStep = 0;
                         break;
                 }
                 break;
@@ -966,7 +966,7 @@ public sealed class MCH_ALT : MachinistRotation
             //StartOpener = false;
             //OpenerInProgress = false;
             //OpenerHasFinished = false;
-            //Openerstep = 0;
+            //OpenerStep = 0;
         }
         ImGui.EndGroup();
 
@@ -976,7 +976,7 @@ public sealed class MCH_ALT : MachinistRotation
         ImGui.Text("StartOpener: " + StartOpener.ToString());
         ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
         ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
-        ImGui.Text("Openerstep: " + Openerstep.ToString());
+        ImGui.Text("OpenerStep: " + OpenerStep.ToString());
         ImGui.EndGroup();
 
         if (InCombat)

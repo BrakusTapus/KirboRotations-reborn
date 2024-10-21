@@ -30,7 +30,7 @@ public sealed class MCH_TEA : MachinistRotation
 
     private bool OpenerHasFinishedDummy { get; set; } = false;
     private bool OpenerHasFinished { get; set; } = false;
-    private int Openerstep { get; set; } = 0;
+    private int OpenerStep { get; set; } = 0;
     const float universalFailsafeThreshold = 5.0f;
     private bool OpenerAvailable { get; set; } = false;
     public bool OpenerInProgress { get; private set; }
@@ -290,7 +290,7 @@ public sealed class MCH_TEA : MachinistRotation
         bool NoHeat = Heat == 0;
         bool NoBattery = Battery == 0;
         bool NoResources = NoHeat && NoBattery;
-        bool Openerstep0 = Openerstep == 0;
+        bool Openerstep0 = OpenerStep == 0;
 
         OpenerAvailable = Lvl80
                                     && HasAirAnchor
@@ -310,7 +310,7 @@ public sealed class MCH_TEA : MachinistRotation
     {
         if (lastAction)
         {
-            Openerstep++;
+            OpenerStep++;
             return false;
         }
         return nextAction;
@@ -319,14 +319,14 @@ public sealed class MCH_TEA : MachinistRotation
     private bool Opener(out IAction? act)
     {
         // Universal failsafe for opener inactivity
-        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && Openerstep > 0)
+        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && OpenerStep > 0)
         {
             act = null;
             OpenerHasFinished = true;  // Stop the opener
             return false;  // Stop further action
         }
 
-        switch (Openerstep)
+        switch (OpenerStep)
         {
             case 0:
                 return OpenerController(IsLastGCD(true, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
@@ -345,7 +345,7 @@ public sealed class MCH_TEA : MachinistRotation
 
             case 5:
                 OpenerHasFinished = true;
-                Openerstep = 0;
+                OpenerStep = 0;
                 break;
         }
         act = null;
@@ -403,6 +403,6 @@ public sealed class MCH_TEA : MachinistRotation
         ImGui.Text("StartOpener: " + StartOpener.ToString());
         ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
         ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
-        ImGui.Text("Openerstep: " + Openerstep.ToString());
+        ImGui.Text("OpenerStep: " + OpenerStep.ToString());
     }
 }

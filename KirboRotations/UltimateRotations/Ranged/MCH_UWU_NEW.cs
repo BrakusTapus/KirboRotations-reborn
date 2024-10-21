@@ -36,7 +36,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
 
     public bool OpenerHasFinishedDummy { get; private set; }
     public bool OpenerHasFinished { get; private set; }
-    public int Openerstep { get; private set; }
+    public int OpenerStep { get; private set; }
     const float universalFailsafeThreshold = 5.0f;
     public bool OpenerAvailable { get; private set; }
     public bool OpenerInProgress { get; private set; }
@@ -357,7 +357,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         bool NoHeat = Heat == 0;
         bool NoBattery = Battery == 0;
         bool NoResources = NoHeat && NoBattery;
-        bool Openerstep0 = Openerstep == 0;
+        bool Openerstep0 = OpenerStep == 0;
 
         OpenerAvailable = Lvl70
                                     && HasHotShot
@@ -376,7 +376,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     {
         if (lastAction)
         {
-            Openerstep++;
+            OpenerStep++;
             return false;
         }
         return nextAction;
@@ -385,14 +385,14 @@ public sealed class MCH_UWU_NEW : MachinistRotation
     private bool Opener(out IAction? act)
     {
         // Universal failsafe for opener inactivity
-        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && Openerstep > 0)
+        if (TimeSinceLastAction.TotalSeconds > universalFailsafeThreshold && OpenerStep > 0)
         {
             act = null;
             OpenerHasFinished = true;  // Stop the opener
             return false;  // Stop further action
         }
 
-        switch (Openerstep)
+        switch (OpenerStep)
         {
             case 0:
                 return OpenerController(IsLastGCD(false, DrillPvE), DrillPvE.CanUse(out act, usedUp: true));
@@ -411,7 +411,7 @@ public sealed class MCH_UWU_NEW : MachinistRotation
 
             case 5:
                 OpenerHasFinished = true;
-                Openerstep = 0;
+                OpenerStep = 0;
                 break;
         }
         act = null;
@@ -468,6 +468,6 @@ public sealed class MCH_UWU_NEW : MachinistRotation
         ImGui.Text("StartOpener: " + StartOpener.ToString());
         ImGui.Text("OpenerInProgress: " + OpenerInProgress.ToString());
         ImGui.Text("OpenerHasFinished: " + OpenerHasFinished.ToString());
-        ImGui.Text("Openerstep: " + Openerstep.ToString());
+        ImGui.Text("OpenerStep: " + OpenerStep.ToString());
     }
 }

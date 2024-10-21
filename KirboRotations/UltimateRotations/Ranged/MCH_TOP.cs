@@ -47,7 +47,7 @@
 //    private bool OpenerHasFinished { get; set; } = false;
 //    private bool OpenerHasFinishedDummy { get; set; } = false;
 //    private bool OpenerAvailable { get; set; } = false;
-//    private int Openerstep { get; set; } = 0;
+//    private int OpenerStep { get; set; } = 0;
 
 //    private bool IsSecond0GCD = false;
 //    #endregion
@@ -448,7 +448,7 @@
 //        bool NoHeat = Heat == 0;
 //        bool NoBattery = Battery == 0;
 //        bool NoResources = NoHeat && NoBattery;
-//        bool Openerstep0 = Openerstep == 0;
+//        bool Openerstep0 = OpenerStep == 0;
 
 //        OpenerAvailable = Lvl100
 //                                    && HasChainSaw
@@ -469,7 +469,7 @@
 //    {
 //        if (lastAction)
 //        {
-//            Openerstep++;
+//            OpenerStep++;
 //            return false;
 //        }
 //        return nextAction;
@@ -477,7 +477,7 @@
 
 //    private bool Opener(out IAction? act)
 //    {
-//        switch (Openerstep)
+//        switch (OpenerStep)
 //        {
 //            case 0:
 //                return OpenerController(IsLastGCD(false, AirAnchorPvE), AirAnchorPvE.CanUse(out act));
@@ -627,7 +627,7 @@
 
 //        ImGui.Text("IsSecond0GCD: " + IsSecond0GCD.ToString());
 //        ImGui.Text("DefaultGCDRemain" + DataBased.DefaultGCDRemain.ToString());
-//        ImGui.Text("Openerstep: " + Openerstep.ToString());
+//        ImGui.Text("OpenerStep: " + OpenerStep.ToString());
 
 
 
